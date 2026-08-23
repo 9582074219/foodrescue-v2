@@ -1,38 +1,50 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Sparkles, Utensils, PlusCircle, Clock, MapPin, Truck, AlertTriangle, CheckCircle2, MessageSquare, Award, Wand2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Sparkles, Utensils, PlusCircle, Clock, MapPin, Truck, AlertTriangle, CheckCircle2, MessageSquare, Award, ShieldCheck, ArrowRight, Thermometer, Sliders, Check } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import UrgencyBadge from '../components/UrgencyBadge';
 import RouteMap from '../components/RouteMap';
-import { FOOD_TEMPLATES, DEFAULT_RECEIVERS, calculateMatchScore } from '../data/mockData';
+import { DEFAULT_RECEIVERS, calculateMatchScore } from '../data/mockData';
 
 export default function DonorPortal() {
   const { currentUser, donations, createAndBroadcastDonation, setActiveChatDonation, openCertificate } = useApp();
 
-  // Form State
+  // 1. AI Interactive Forecaster State (Editable by Donor)
+  const [aiPrepared, setAiPrepared] = useState(currentUser?.dailyPrepared || 700);
+  const [aiGuests, setAiGuests] = useState(currentUser?.expectedDemand || 520);
+  const [aiStorage, setAiStorage] = useState('HOT_CHAFING'); // 'HOT_CHAFING' | 'ROOM_TEMP' | 'REFRIGERATED'
+  const [aiPrepTime, setAiPrepTime] = useState('08:30 PM');
+
+  // Dynamic AI Calculations
+  const calcSurplus = Math.max(0, Number(aiPrepared) - Number(aiGuests));
+  const surplusPercent = Math.round((calcSurplus / (Number(aiPrepared) || 1)) * 100);
+  const safeHours = aiStorage === 'HOT_CHAFING' ? 4.5 : aiStorage === 'REFRIGERATED' ? 6.0 : 3.0;
+  const urgencyScore = calcSurplus >= 120 ? 95 : calcSurplus >= 70 ? 85 : calcSurplus >= 30 ? 70 : 50;
+  const freshnessScore = aiStorage === 'HOT_CHAFING' ? 96 : aiStorage === 'REFRIGERATED' ? 98 : 88;
+  const calculatedExpiry = aiStorage === 'HOT_CHAFING' ? '12:30 AM' : aiStorage === 'REFRIGERATED' ? '02:30 AM' : '11:30 PM';
+
+  // 2. Listing Form State
   const [foodType, setFoodType] = useState('Paneer Butter Masala, Dal Makhani, Veg Pulao, Rotis & Sweets');
-  const [quantity, setQuantity] = useState(150);
+  const [quantity, setQuantity] = useState(180);
   const [foodCategory, setFoodCategory] = useState('Cooked Meal (Event Buffet)');
   const [preparedAt, setPreparedAt] = useState('08:30 PM');
   const [availableUntil, setAvailableUntil] = useState('12:30 AM');
-  const [location, setLocation] = useState(currentUser?.address || 'Celebration Banquet, Sector 29 Main Road');
+  const [location, setLocation] = useState(currentUser?.address || 'Sector 29, Main City Corridor');
   const [notes, setNotes] = useState('Freshly prepared buffet food stored in stainless steel insulated containers.');
+
+  // Apply AI Calculation into Form
+  const applyCalculatedSurplus = () => {
+    setQuantity(calcSurplus);
+    setPreparedAt(aiPrepTime);
+    setAvailableUntil(calculatedExpiry);
+    const elem = document.getElementById('donation-form-section');
+    if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+  };
 
   // Filter donations for this donor
   const donorDonations = donations.filter(d => d.donorId === currentUser?.id);
   const activeDonations = donorDonations.filter(d => d.status !== 'COMPLETED');
   const completedDonations = donorDonations.filter(d => d.status === 'COMPLETED');
-
-  // Load Preset
-  const loadPreset = (preset) => {
-    setFoodType(preset.foodType);
-    setQuantity(preset.quantity);
-    setFoodCategory(preset.foodCategory);
-    setPreparedAt(preset.preparedAt);
-    setAvailableUntil(preset.availableUntil);
-    setLocation(preset.location);
-    setNotes(preset.notes);
-  };
 
   const handleCreate = (e) => {
     e.preventDefault();
@@ -46,10 +58,6 @@ export default function DonorPortal() {
       notes
     });
   };
-
-  const prepared = currentUser?.dailyPrepared || 700;
-  const demand = currentUser?.expectedDemand || 520;
-  const surplus = currentUser?.predictedSurplus || 180;
 
   return (
     <div className="container-custom" style={{ padding: '32px 20px', display: 'flex', flexDirection: 'column', gap: 26 }}>
@@ -68,7 +76,7 @@ export default function DonorPortal() {
               </span>
             </div>
             <p style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>
-              📍 {currentUser?.address} • {currentUser?.categoryLabel}
+              📍 {currentUser?.address} • 📞 {currentUser?.phone}
             </p>
           </div>
         </div>
@@ -84,63 +92,245 @@ export default function DonorPortal() {
         </button>
       </div>
 
-      {/* 1. AI DEMAND & SURPLUS FORECASTING ENGINE */}
+      {/* 1. INTERACTIVE AI SURPLUS & SAFE-TIME PREDICTOR (FULLY EDITABLE) */}
       <div className="card-dark" style={{ position: 'relative', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+        
+        {/* Card Header */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 0 12px rgba(16, 185, 129, 0.4)' }}>
-              <Sparkles size={18} />
+            <div style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 0 14px rgba(16, 185, 129, 0.4)' }}>
+              <Sparkles size={20} />
             </div>
             <div>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: '#f8fafc', margin: 0 }}>
-                AI Food Demand & Surplus Prediction Engine
-              </h3>
-              <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>
-                Predicts guest consumption and kitchen surplus before spoilage occurs
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 900, color: '#f8fafc', margin: 0 }}>
+                  Interactive AI Surplus & Safe-Time Predictor
+                </h3>
+                <span style={{ fontSize: 11, padding: '2px 8px', backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#34d399', borderRadius: 6, fontWeight: 800 }}>
+                  LIVE AI MODEL
+                </span>
+              </div>
+              <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
+                Edit your kitchen preparation numbers to forecast surplus and calculate exact safe-consumption hours in real-time.
               </p>
             </div>
           </div>
 
-          <span style={{ fontSize: 11, padding: '3px 10px', backgroundColor: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', borderRadius: 9999, fontWeight: 700, border: '1px solid rgba(245, 158, 11, 0.4)' }}>
-            ⚡ 87% Confidence Score
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 11, padding: '4px 12px', backgroundColor: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', borderRadius: 9999, fontWeight: 800, border: '1px solid rgba(245, 158, 11, 0.4)' }}>
+              ⚡ 87% Prediction Confidence
+            </span>
+          </div>
         </div>
 
-        {/* 3 Metric Columns */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+        {/* INTERACTIVE INPUT CONTROLS ROW */}
+        <div style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.04)',
+          borderRadius: 16,
+          padding: '18px 20px',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 16,
+          marginBottom: 20
+        }}>
           
-          <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.04)', borderRadius: 12, padding: '14px 16px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-            <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>1. Total Prepared</span>
-            <div style={{ fontSize: 28, fontWeight: 900, color: '#ffffff', fontFamily: 'var(--font-display)', marginTop: 2 }}>
-              {prepared} <span style={{ fontSize: 13, fontWeight: 500, color: '#94a3b8' }}>meals</span>
-            </div>
-            <span style={{ fontSize: 11, color: '#64748b' }}>Scheduled in kitchen</span>
+          {/* Input 1: Total Prepared */}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
+              Total Food Prepared (Meals)
+            </label>
+            <input
+              type="number"
+              min="10"
+              max="2000"
+              value={aiPrepared}
+              onChange={(e) => setAiPrepared(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 10,
+                backgroundColor: '#0f172a',
+                border: '1px solid #334155',
+                color: '#ffffff',
+                fontSize: 16,
+                fontWeight: 800
+              }}
+            />
           </div>
 
-          <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.04)', borderRadius: 12, padding: '14px 16px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-            <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>2. Expected Consumption</span>
-            <div style={{ fontSize: 28, fontWeight: 900, color: '#38bdf8', fontFamily: 'var(--font-display)', marginTop: 2 }}>
-              {demand} <span style={{ fontSize: 13, fontWeight: 500, color: '#94a3b8' }}>meals</span>
-            </div>
-            <span style={{ fontSize: 11, color: '#38bdf8' }}>AI Projected Demand</span>
+          {/* Input 2: Expected Demand / Guests */}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
+              Expected Guests / Eaters
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="2000"
+              value={aiGuests}
+              onChange={(e) => setAiGuests(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 10,
+                backgroundColor: '#0f172a',
+                border: '1px solid #334155',
+                color: '#38bdf8',
+                fontSize: 16,
+                fontWeight: 800
+              }}
+            />
           </div>
 
-          <div style={{ backgroundColor: 'rgba(244, 63, 94, 0.12)', borderRadius: 12, padding: '14px 16px', border: '1px solid rgba(244, 63, 94, 0.3)' }}>
-            <span style={{ fontSize: 11, color: '#fca5a5', fontWeight: 800, textTransform: 'uppercase' }}>3. Predicted Surplus</span>
-            <div style={{ fontSize: 28, fontWeight: 900, color: '#f43f5e', fontFamily: 'var(--font-display)', marginTop: 2 }}>
-              ~{surplus} <span style={{ fontSize: 13, fontWeight: 500, color: '#fca5a5' }}>meals</span>
-            </div>
-            <span style={{ fontSize: 11, color: '#fca5a5', fontWeight: 700 }}>Surplus Alert Active 🔴</span>
+          {/* Input 3: Prep Time */}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
+              Cooked / Prep Time
+            </label>
+            <input
+              type="text"
+              value={aiPrepTime}
+              onChange={(e) => setAiPrepTime(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 10,
+                backgroundColor: '#0f172a',
+                border: '1px solid #334155',
+                color: '#ffffff',
+                fontSize: 14,
+                fontWeight: 700
+              }}
+            />
+          </div>
+
+          {/* Input 4: Storage & Temperature */}
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
+              Storage & Temp Condition
+            </label>
+            <select
+              value={aiStorage}
+              onChange={(e) => setAiStorage(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 10,
+                backgroundColor: '#0f172a',
+                border: '1px solid #334155',
+                color: '#fde047',
+                fontSize: 13,
+                fontWeight: 700
+              }}
+            >
+              <option value="HOT_CHAFING">🔥 Hot Thermal Chafing (65°C)</option>
+              <option value="ROOM_TEMP">🌡️ Room Temperature (25°C)</option>
+              <option value="REFRIGERATED">❄️ Chilled / Refrigerated (4°C)</option>
+            </select>
           </div>
 
         </div>
+
+        {/* DYNAMIC AI COMPUTED METRICS (4 TILES) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 18 }}>
+          
+          {/* Tile 1: Predicted Surplus */}
+          <div style={{ backgroundColor: 'rgba(244, 63, 94, 0.12)', borderRadius: 14, padding: '16px 18px', border: '1px solid rgba(244, 63, 94, 0.3)' }}>
+            <span style={{ fontSize: 11, color: '#fca5a5', fontWeight: 800, textTransform: 'uppercase' }}>
+              🔮 1. Predicted Surplus
+            </span>
+            <div style={{ fontSize: 30, fontWeight: 900, color: '#f43f5e', fontFamily: 'var(--font-display)', marginTop: 4 }}>
+              ~{calcSurplus} <span style={{ fontSize: 14, fontWeight: 500, color: '#fca5a5' }}>meals</span>
+            </div>
+            <span style={{ fontSize: 11, color: '#fca5a5', fontWeight: 700 }}>
+              {surplusPercent}% of prepared food
+            </span>
+          </div>
+
+          {/* Tile 2: Safe-Time Window */}
+          <div style={{ backgroundColor: 'rgba(245, 158, 11, 0.12)', borderRadius: 14, padding: '16px 18px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+            <span style={{ fontSize: 11, color: '#fde68a', fontWeight: 800, textTransform: 'uppercase' }}>
+              ⏱️ 2. Safe Window Remaining
+            </span>
+            <div style={{ fontSize: 30, fontWeight: 900, color: '#f59e0b', fontFamily: 'var(--font-display)', marginTop: 4 }}>
+              ~{safeHours} <span style={{ fontSize: 14, fontWeight: 500, color: '#fde68a' }}>hours</span>
+            </div>
+            <span style={{ fontSize: 11, color: '#fde68a', fontWeight: 700 }}>
+              Safe until: {calculatedExpiry}
+            </span>
+          </div>
+
+          {/* Tile 3: AI Urgency & Quality Score */}
+          <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.12)', borderRadius: 14, padding: '16px 18px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+            <span style={{ fontSize: 11, color: '#a7f3d0', fontWeight: 800, textTransform: 'uppercase' }}>
+              🛡️ 3. Freshness & Quality
+            </span>
+            <div style={{ fontSize: 30, fontWeight: 900, color: '#34d399', fontFamily: 'var(--font-display)', marginTop: 4 }}>
+              {freshnessScore}% <span style={{ fontSize: 14, fontWeight: 500, color: '#a7f3d0' }}>Index</span>
+            </div>
+            <span style={{ fontSize: 11, color: '#34d399', fontWeight: 700 }}>
+              Urgency: {urgencyScore}% High Priority
+            </span>
+          </div>
+
+          {/* Tile 4: Environmental Value */}
+          <div style={{ backgroundColor: 'rgba(2, 132, 199, 0.12)', borderRadius: 14, padding: '16px 18px', border: '1px solid rgba(2, 132, 199, 0.3)' }}>
+            <span style={{ fontSize: 11, color: '#bae6fd', fontWeight: 800, textTransform: 'uppercase' }}>
+              🌱 4. Potential ESG Impact
+            </span>
+            <div style={{ fontSize: 30, fontWeight: 900, color: '#38bdf8', fontFamily: 'var(--font-display)', marginTop: 4 }}>
+              ~{Math.round(calcSurplus * 0.8)} <span style={{ fontSize: 14, fontWeight: 500, color: '#bae6fd' }}>kg CO2</span>
+            </div>
+            <span style={{ fontSize: 11, color: '#38bdf8', fontWeight: 700 }}>
+              80G Tax Exemption Ready
+            </span>
+          </div>
+
+        </div>
+
+        {/* Dynamic Action Bar */}
+        <div style={{
+          backgroundColor: 'rgba(15, 23, 42, 0.6)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: 14,
+          padding: '14px 18px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 14
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <AlertTriangle size={18} className="text-amber-400" />
+            <span style={{ fontSize: 13, color: '#f1f5f9', lineHeight: 1.4 }}>
+              <strong>AI Recommendation:</strong> Estimated surplus of <strong>~{calcSurplus} meals</strong> predicted. Safe for redistribution for <strong>~{safeHours} hours</strong>.
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={applyCalculatedSurplus}
+            className="btn-primary"
+            style={{
+              padding: '9px 18px',
+              fontSize: 13,
+              borderRadius: 10,
+              boxShadow: '0 0 14px rgba(16, 185, 129, 0.4)'
+            }}
+          >
+            <Sparkles size={15} />
+            <span>Apply AI Surplus ({calcSurplus} Meals) to Form ➔</span>
+          </button>
+        </div>
+
       </div>
 
       {/* 2-COLUMN: CREATE FOOD DONATION FORM (LEFT) + ACTIVE RESCUES & RADAR (RIGHT) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 24 }}>
         
         {/* LEFT: CREATE FOOD DONATION FORM */}
-        <div className="card">
+        <div className="card" id="donation-form-section">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <PlusCircle className="text-emerald-600" size={20} />
@@ -150,7 +340,7 @@ export default function DonorPortal() {
             </div>
           </div>
 
-          <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
                 Donor Category / Venue Type *
@@ -213,19 +403,7 @@ export default function DonorPortal() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
-                  Cooked / Prepared At
-                </label>
-                <input
-                  type="text"
-                  value={preparedAt}
-                  onChange={(e) => setPreparedAt(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 13 }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
-                  Safe Until (Expiry Window)
+                  Safe Until (Calculated Expiry)
                 </label>
                 <input
                   type="text"
@@ -234,16 +412,28 @@ export default function DonorPortal() {
                   style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 13 }}
                 />
               </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                  Pickup Address
+                </label>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 13 }}
+                />
+              </div>
             </div>
 
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
-                Pickup Location Address
+                Packaging / Special Notes
               </label>
               <input
                 type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
                 style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 13 }}
               />
             </div>
@@ -251,7 +441,7 @@ export default function DonorPortal() {
             <button
               type="submit"
               className="btn-primary"
-              style={{ width: '100%', padding: '12px', fontSize: 14, marginTop: 6 }}
+              style={{ width: '100%', padding: '13px', fontSize: 14, marginTop: 4, borderRadius: 12 }}
             >
               <Sparkles size={16} />
               <span>Broadcast Surplus to Nearby NGOs 📡</span>
@@ -398,7 +588,7 @@ export default function DonorPortal() {
                     <span style={{ color: '#64748b' }}>📍 {ngo.distanceLabel} • Capacity: {ngo.currentNeedMeals} Meals</span>
                   </div>
                   <span style={{ fontWeight: 800, color: '#059669', backgroundColor: '#ecfdf5', padding: '2px 8px', borderRadius: 6 }}>
-                    {calculateMatchScore({ quantity: 150, urgencyScore: 90 }, ngo)}% Match
+                    {calculateMatchScore({ quantity: calcSurplus || 150, urgencyScore: urgencyScore }, ngo)}% Match
                   </span>
                 </div>
               ))}
