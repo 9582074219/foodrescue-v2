@@ -4,7 +4,7 @@ import { Sparkles, Utensils, PlusCircle, Clock, MapPin, Truck, AlertTriangle, Ch
 import StatCard from '../components/StatCard';
 import UrgencyBadge from '../components/UrgencyBadge';
 import RouteMap from '../components/RouteMap';
-import { DEMO_PRESETS, DEFAULT_RECEIVERS, calculateMatchScore } from '../data/mockData';
+import { FOOD_TEMPLATES, DEFAULT_RECEIVERS, calculateMatchScore } from '../data/mockData';
 
 export default function DonorPortal() {
   const { currentUser, donations, createAndBroadcastDonation, setActiveChatDonation, openCertificate } = useApp();
@@ -150,14 +150,14 @@ export default function DonorPortal() {
             </div>
           </div>
 
-          {/* 1-Click Sample Presets */}
+          {/* Quick Food Templates */}
           <div style={{ marginBottom: 18, backgroundColor: '#f8fafc', padding: '12px 14px', borderRadius: 12, border: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, fontSize: 11, fontWeight: 800, color: '#475569', textTransform: 'uppercase' }}>
               <Wand2 size={13} className="text-amber-500" />
-              <span>1-Click Sample Presets:</span>
+              <span>⚡ Quick Food Templates:</span>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {DEMO_PRESETS.map((p) => (
+              {FOOD_TEMPLATES.map((p) => (
                 <button
                   key={p.id}
                   type="button"
@@ -182,11 +182,28 @@ export default function DonorPortal() {
           <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                Donor Category / Venue Type *
+              </label>
+              <select
+                value={foodCategory}
+                onChange={(e) => setFoodCategory(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 13, backgroundColor: '#ffffff' }}
+              >
+                <option value="Cooked Meal (Event Buffet)">🎉 Wedding / Banquet Hall Event</option>
+                <option value="Restaurant Cooked Food">🍽️ Restaurant / Cafe Buffet</option>
+                <option value="Hostel Mess Batch">🎓 College / Hostel Mess Canteen</option>
+                <option value="Household Community Batch">🏠 Individual / Household Event</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
                 Food Items & Dishes *
               </label>
               <input
                 type="text"
                 required
+                placeholder="e.g. Rice, Dal, Mixed Sabzi, Roti"
                 value={foodType}
                 onChange={(e) => setFoodType(e.target.value)}
                 style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 13 }}
@@ -201,7 +218,7 @@ export default function DonorPortal() {
                 <input
                   type="number"
                   required
-                  min="10"
+                  min="5"
                   max="1000"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
@@ -211,12 +228,12 @@ export default function DonorPortal() {
 
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
-                  Food Category
+                  Cooked / Prepared At
                 </label>
                 <input
                   type="text"
-                  value={foodCategory}
-                  onChange={(e) => setFoodCategory(e.target.value)}
+                  value={preparedAt}
+                  onChange={(e) => setPreparedAt(e.target.value)}
                   style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 13 }}
                 />
               </div>

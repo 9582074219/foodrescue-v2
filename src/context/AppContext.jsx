@@ -15,10 +15,10 @@ export function AppProvider({ children }) {
   // Real-Time Cross-Tab Broadcast Channel
   const [channel, setChannel] = useState(null);
 
-  // Active Authenticated User (null = Auth Gateway)
+  // Active Authenticated User (null = Auth Gateway / Login Page first)
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('foodrescue_v2_user');
-    return saved ? JSON.parse(saved) : DEFAULT_DONORS[0]; // Default to Celebration Banquet
+    return saved ? JSON.parse(saved) : null;
   });
 
   // Donations Database (Synchronized)

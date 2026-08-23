@@ -1,47 +1,72 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { DEFAULT_DONORS, DEFAULT_RECEIVERS } from '../data/mockData';
-import { Utensils, HeartHandshake, Shield, Sparkles, ArrowRight, CheckCircle2, UserPlus, LogIn, Lock } from 'lucide-react';
+import { Utensils, HeartHandshake, Shield, Sparkles, ArrowRight, UserPlus, LogIn, Lock, CheckCircle2 } from 'lucide-react';
 
 export default function AuthGateway() {
   const { loginUser } = useApp();
 
-  const [authMode, setAuthMode] = useState('ROLE_SELECT'); // 'ROLE_SELECT' | 'CUSTOM_REGISTER' | 'ADMIN_AUTH'
-  const [selectedRole, setSelectedRole] = useState('DONOR'); // 'DONOR' | 'RECEIVER'
-  const [adminPasscode, setAdminPasscode] = useState('');
+  const [activeTab, setActiveTab] = useState('DONOR'); // 'DONOR' | 'NGO' | 'ADMIN'
   
-  // Custom Registration Form State
-  const [name, setName] = useState('');
-  const [categoryLabel, setCategoryLabel] = useState('Banquet & Party Hall');
-  const [address, setAddress] = useState('');
-  const [phone, setPhone] = useState('');
+  // Donor Login/Register Form State
+  const [donorName, setDonorName] = useState('');
+  const [donorPhone, setDonorPhone] = useState('');
+  const [donorAddress, setDonorAddress] = useState('');
 
-  const handleCustomRegister = (e) => {
+  // NGO Login/Register Form State
+  const [ngoName, setNgoName] = useState('');
+  const [ngoPhone, setNgoPhone] = useState('');
+  const [ngoAddress, setNgoAddress] = useState('');
+
+  // Admin Passcode State
+  const [adminPasscode, setAdminPasscode] = useState('');
+
+  // 1. Handle Donor Sign-In / Register
+  const handleDonorSubmit = (e) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!donorName.trim() || !donorPhone.trim()) return;
 
-    const newUser = {
-      id: `user_${Date.now()}`,
-      name: name.trim(),
-      role: selectedRole,
-      type: selectedRole === 'DONOR' ? 'COMMERCIAL_DONOR' : 'COMMUNITY_SHELTER',
-      categoryLabel: categoryLabel,
-      address: address.trim() || 'Sector 18, Central City',
-      phone: phone.trim() || '+91 98000 11223',
-      avatar: selectedRole === 'DONOR' ? '🏢' : '🤝',
-      badge: selectedRole === 'DONOR' ? 'Registered Food Partner' : 'Registered Rescue Partner',
-      rating: '5.0 ★ (New Partner)',
-      dailyPrepared: 400,
-      expectedDemand: 320,
-      predictedSurplus: 80,
-      currentNeedMeals: 100,
-      pickupAvailable: true
+    const donorUser = {
+      id: `donor_${Date.now()}`,
+      name: donorName.trim(),
+      role: 'DONOR',
+      phone: donorPhone.trim(),
+      address: donorAddress.trim() || 'Main City Area',
+      avatar: '🏢',
+      badge: 'Verified Food Partner',
+      rating: '5.0 ★',
+      dailyPrepared: 500,
+      expectedDemand: 380,
+      predictedSurplus: 120
     };
 
-    loginUser(newUser);
+    loginUser(donorUser);
   };
 
-  const handleAdminLogin = (e) => {
+  // 2. Handle NGO Sign-In / Register
+  const handleNgoSubmit = (e) => {
+    e.preventDefault();
+    if (!ngoName.trim() || !ngoPhone.trim()) return;
+
+    const ngoUser = {
+      id: `ngo_${Date.now()}`,
+      name: ngoName.trim(),
+      role: 'RECEIVER',
+      phone: ngoPhone.trim(),
+      address: ngoAddress.trim() || 'Shelter Complex, Ward 4',
+      avatar: '🤝',
+      badge: 'Verified Rescue Partner',
+      rating: '5.0 ★',
+      currentNeedMeals: 120,
+      pickupAvailable: true,
+      pickupFleet: 'Dedicated Rescue Fleet'
+    };
+
+    loginUser(ngoUser);
+  };
+
+  // 3. Handle Admin Login
+  const handleAdminSubmit = (e) => {
     e.preventDefault();
     if (adminPasscode === '1234' || adminPasscode === 'admin' || adminPasscode === '') {
       loginUser({
@@ -52,13 +77,13 @@ export default function AuthGateway() {
         avatar: '🛡️'
       });
     } else {
-      alert('Invalid admin passcode. (Use 1234 or leave empty for demo)');
+      alert('Invalid admin passcode. (Default: 1234)');
     }
   };
 
   return (
     <div style={{
-      minHeight: '85vh',
+      minHeight: '88vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -66,385 +91,383 @@ export default function AuthGateway() {
       background: 'radial-gradient(circle at 50% 10%, #1e293b 0%, #0f172a 60%, #080c14 100%)',
       color: '#ffffff'
     }}>
-      <div style={{ width: '100%', maxWidth: 900 }}>
+      <div style={{ width: '100%', maxWidth: 780 }}>
         
-        {/* Main Header */}
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+        {/* Brand Header */}
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
-            padding: '6px 16px',
+            padding: '6px 18px',
             backgroundColor: 'rgba(16, 185, 129, 0.15)',
             border: '1px solid rgba(16, 185, 129, 0.35)',
             borderRadius: 9999,
             color: '#34d399',
             fontSize: 13,
             fontWeight: 800,
-            marginBottom: 16
+            marginBottom: 14
           }}>
             <Sparkles size={16} />
-            <span>AUTHENTICATION & ROLE SELECTION GATEWAY</span>
+            <span>AI-POWERED SURPLUS REDISTRIBUTION PLATFORM</span>
           </div>
 
-          <h1 style={{ fontSize: 36, fontWeight: 900, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em', color: '#ffffff' }}>
+          <h1 style={{ fontSize: 34, fontWeight: 900, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em', color: '#ffffff' }}>
             Welcome to <span style={{ color: '#10b981' }}>FoodRescue V2</span>
           </h1>
-          <p style={{ fontSize: 16, color: '#94a3b8', marginTop: 8, maxWidth: 620, margin: '8px auto 0' }}>
-            Select your account type below to enter your dedicated operational portal:
+          <p style={{ fontSize: 15, color: '#94a3b8', marginTop: 6 }}>
+            Select your account type to login or register:
           </p>
         </div>
 
-        {authMode === 'ROLE_SELECT' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-            
-            {/* DUAL ROLE CARDS */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
-              
-              {/* 1. DONOR ROLE CARD */}
-              <div
-                className="card-hover-effect"
-                style={{
-                  backgroundColor: '#1e293b',
-                  borderRadius: 22,
-                  border: '2px solid #334155',
-                  padding: '28px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 18
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{
-                    width: 50,
-                    height: 50,
-                    borderRadius: 14,
-                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                    color: '#34d399',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 24
-                  }}>
-                    🏢
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: 20, fontWeight: 900, color: '#f8fafc' }}>I am a Food Donor</h3>
-                    <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>Banquet Halls, Restaurants, Canteens & Events</p>
-                  </div>
-                </div>
+        {/* 3-TAB ROLE SWITCHER */}
+        <div style={{
+          backgroundColor: '#1e293b',
+          borderRadius: 16,
+          padding: 6,
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr 1fr',
+          gap: 6,
+          marginBottom: 24,
+          border: '1px solid #334155'
+        }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('DONOR')}
+            style={{
+              padding: '12px 16px',
+              borderRadius: 12,
+              border: 'none',
+              backgroundColor: activeTab === 'DONOR' ? '#10b981' : 'transparent',
+              color: activeTab === 'DONOR' ? '#ffffff' : '#94a3b8',
+              fontWeight: 800,
+              fontSize: 14,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              transition: 'all 0.2s'
+            }}
+          >
+            <span>🏢 Food Donor</span>
+          </button>
 
-                <div style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
-                  • 🔮 AI Surplus Prediction Engine<br />
-                  • 🍱 List surplus food & broadcast to nearby NGOs<br />
-                  • 💬 Direct real-time chat with accepting shelter<br />
-                  • 📜 Downloadable 80G Tax Exemption Certificate
-                </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('NGO')}
+            style={{
+              padding: '12px 16px',
+              borderRadius: 12,
+              border: 'none',
+              backgroundColor: activeTab === 'NGO' ? '#0284c7' : 'transparent',
+              color: activeTab === 'NGO' ? '#ffffff' : '#94a3b8',
+              fontWeight: 800,
+              fontSize: 14,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              transition: 'all 0.2s'
+            }}
+          >
+            <span>🤝 NGO / Shelter</span>
+          </button>
 
-                {/* 1-Click Quick Demo Donors */}
-                <div style={{ borderTop: '1px solid #334155', paddingTop: 16 }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    ⚡ 1-Click Demo Profiles:
-                  </span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
-                    {DEFAULT_DONORS.slice(0, 3).map((donor) => (
-                      <button
-                        key={donor.id}
-                        type="button"
-                        onClick={() => loginUser(donor)}
-                        style={{
-                          backgroundColor: '#0f172a',
-                          border: '1px solid #334155',
-                          borderRadius: 10,
-                          padding: '10px 14px',
-                          color: '#f8fafc',
-                          fontSize: 13,
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          textAlign: 'left'
-                        }}
-                        className="card-hover-effect"
-                      >
-                        <span>{donor.avatar} {donor.name}</span>
-                        <ArrowRight size={14} className="text-emerald-400" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('ADMIN')}
+            style={{
+              padding: '12px 16px',
+              borderRadius: 12,
+              border: 'none',
+              backgroundColor: activeTab === 'ADMIN' ? '#f59e0b' : 'transparent',
+              color: activeTab === 'ADMIN' ? '#0f172a' : '#94a3b8',
+              fontWeight: 800,
+              fontSize: 14,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              transition: 'all 0.2s'
+            }}
+          >
+            <span>🛡️ City Admin</span>
+          </button>
+        </div>
 
-                <button
-                  onClick={() => { setSelectedRole('DONOR'); setAuthMode('CUSTOM_REGISTER'); }}
-                  className="btn-primary"
-                  style={{ width: '100%', padding: '12px', fontSize: 13, marginTop: 6 }}
-                >
-                  <UserPlus size={16} />
-                  <span>Register New Donor Profile</span>
-                </button>
-              </div>
-
-              {/* 2. NGO ROLE CARD */}
-              <div
-                className="card-hover-effect"
-                style={{
-                  backgroundColor: '#1e293b',
-                  borderRadius: 22,
-                  border: '2px solid #334155',
-                  padding: '28px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 18
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{
-                    width: 50,
-                    height: 50,
-                    borderRadius: 14,
-                    backgroundColor: 'rgba(2, 132, 199, 0.2)',
-                    color: '#38bdf8',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 24
-                  }}>
-                    🤝
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: 20, fontWeight: 900, color: '#f8fafc' }}>I am an NGO / Shelter</h3>
-                    <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>Night Shelters, Food Banks & Volunteers</p>
-                  </div>
-                </div>
-
-                <div style={{ fontSize: 13, color: '#cbd5e1', lineHeight: 1.6 }}>
-                  • 📡 Live nearby inbound surplus food stream<br />
-                  • ⚡ 1-Click Accept & Lock donation<br />
-                  • 💬 Direct real-time chat with Donor<br />
-                  • ✓ Mark "Collected" & "Distributed to Needy"
-                </div>
-
-                {/* 1-Click Quick Demo NGOs */}
-                <div style={{ borderTop: '1px solid #334155', paddingTop: 16 }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    ⚡ 1-Click Demo Profiles:
-                  </span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
-                    {DEFAULT_RECEIVERS.map((ngo) => (
-                      <button
-                        key={ngo.id}
-                        type="button"
-                        onClick={() => loginUser(ngo)}
-                        style={{
-                          backgroundColor: '#0f172a',
-                          border: '1px solid #334155',
-                          borderRadius: 10,
-                          padding: '10px 14px',
-                          color: '#f8fafc',
-                          fontSize: 13,
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          textAlign: 'left'
-                        }}
-                        className="card-hover-effect"
-                      >
-                        <span>🤝 {ngo.name}</span>
-                        <ArrowRight size={14} className="text-sky-400" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => { setSelectedRole('RECEIVER'); setAuthMode('CUSTOM_REGISTER'); }}
-                  style={{
-                    backgroundColor: '#0284c7',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: 12,
-                    padding: '12px',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    marginTop: 6
-                  }}
-                >
-                  <UserPlus size={16} />
-                  <span>Register New NGO / Shelter</span>
-                </button>
-              </div>
-
-            </div>
-
-            {/* Municipal Admin Link */}
-            <div style={{ textAlign: 'center', borderTop: '1px solid #1e293b', paddingTop: 20 }}>
-              <button
-                type="button"
-                onClick={() => setAuthMode('ADMIN_AUTH')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#94a3b8',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6
-                }}
-              >
-                <Shield size={15} className="text-amber-400" />
-                <span>Municipal City Administration Access & Audit Logs ➔</span>
-              </button>
-            </div>
-
-          </div>
-        )}
-
-        {/* CUSTOM REGISTRATION SCREEN */}
-        {authMode === 'CUSTOM_REGISTER' && (
+        {/* 1. FOOD DONOR LOGIN / REGISTER CARD */}
+        {activeTab === 'DONOR' && (
           <div style={{
             backgroundColor: '#1e293b',
             borderRadius: 22,
-            border: '1px solid #334155',
-            padding: '32px',
-            maxWidth: 540,
-            margin: '0 auto'
+            border: '2px solid #334155',
+            padding: '30px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
           }}>
-            <h2 style={{ fontSize: 22, fontWeight: 900, color: '#f8fafc', marginBottom: 6 }}>
-              Register as {selectedRole === 'DONOR' ? '🏢 Food Donor' : '🤝 NGO / Shelter'}
-            </h2>
-            <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 20 }}>
-              Create your profile to start donating or receiving surplus food.
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#34d399', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
+                🏢
+              </div>
+              <div>
+                <h3 style={{ fontSize: 20, fontWeight: 900, color: '#f8fafc', margin: 0 }}>Food Donor Portal</h3>
+                <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>Enter your name and contact details to proceed</p>
+              </div>
+            </div>
 
-            <form onSubmit={handleCustomRegister} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <form onSubmit={handleDonorSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700, color: '#cbd5e1', display: 'block', marginBottom: 6 }}>
-                  Organization / Venue Name *
+                  Full Name / Contact Person *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder={selectedRole === 'DONOR' ? 'e.g. Royal Grand Palace' : 'e.g. Seva Food Bank'}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, backgroundColor: '#0f172a', border: '1px solid #334155', color: '#fff', fontSize: 13 }}
+                  placeholder="e.g. Rajesh Sharma"
+                  value={donorName}
+                  onChange={(e) => setDonorName(e.target.value)}
+                  style={{ width: '100%', padding: '11px 14px', borderRadius: 10, backgroundColor: '#0f172a', border: '1px solid #334155', color: '#fff', fontSize: 14 }}
                 />
               </div>
 
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#cbd5e1', display: 'block', marginBottom: 6 }}>
-                  Category Type
-                </label>
-                <input
-                  type="text"
-                  value={categoryLabel}
-                  onChange={(e) => setCategoryLabel(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, backgroundColor: '#0f172a', border: '1px solid #334155', color: '#fff', fontSize: 13 }}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#cbd5e1', display: 'block', marginBottom: 6 }}>
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+91 98220 54321"
+                    value={donorPhone}
+                    onChange={(e) => setDonorPhone(e.target.value)}
+                    style={{ width: '100%', padding: '11px 14px', borderRadius: 10, backgroundColor: '#0f172a', border: '1px solid #334155', color: '#fff', fontSize: 14 }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#cbd5e1', display: 'block', marginBottom: 6 }}>
+                    Address / Area
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Sector 29, Main Road"
+                    value={donorAddress}
+                    onChange={(e) => setDonorAddress(e.target.value)}
+                    style={{ width: '100%', padding: '11px 14px', borderRadius: 10, backgroundColor: '#0f172a', border: '1px solid #334155', color: '#fff', fontSize: 14 }}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#cbd5e1', display: 'block', marginBottom: 6 }}>
-                  Address / City Area
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Sector 18 Market, Main Road"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, backgroundColor: '#0f172a', border: '1px solid #334155', color: '#fff', fontSize: 13 }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#cbd5e1', display: 'block', marginBottom: 6 }}>
-                  Contact Phone
-                </label>
-                <input
-                  type="text"
-                  placeholder="+91 98000 11223"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: 10, backgroundColor: '#0f172a', border: '1px solid #334155', color: '#fff', fontSize: 13 }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-                <button
-                  type="button"
-                  onClick={() => setAuthMode('ROLE_SELECT')}
-                  className="btn-secondary"
-                  style={{ flex: 1, backgroundColor: '#0f172a', color: '#f1f5f9', borderColor: '#334155' }}
-                >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  style={{ flex: 2 }}
-                >
-                  Create & Enter Dashboard
-                </button>
-              </div>
+              <button
+                type="submit"
+                className="btn-primary"
+                style={{ width: '100%', padding: '13px', fontSize: 14, marginTop: 6 }}
+              >
+                <LogIn size={16} />
+                <span>Enter Donor Portal ➔</span>
+              </button>
             </form>
+
+            {/* Quick Sign-In with Verified Donor Accounts */}
+            <div style={{ borderTop: '1px solid #334155', marginTop: 22, paddingTop: 16 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                ⚡ Quick Sign-in (Verified Accounts):
+              </span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8, marginTop: 10 }}>
+                {DEFAULT_DONORS.map((donor) => (
+                  <button
+                    key={donor.id}
+                    type="button"
+                    onClick={() => loginUser(donor)}
+                    style={{
+                      backgroundColor: '#0f172a',
+                      border: '1px solid #334155',
+                      borderRadius: 10,
+                      padding: '10px 12px',
+                      color: '#f8fafc',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      textAlign: 'left'
+                    }}
+                    className="card-hover-effect"
+                  >
+                    <span>{donor.avatar} {donor.name}</span>
+                    <ArrowRight size={13} className="text-emerald-400" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
           </div>
         )}
 
-        {/* ADMIN AUTH SCREEN */}
-        {authMode === 'ADMIN_AUTH' && (
+        {/* 2. NGO / SHELTER LOGIN / REGISTER CARD */}
+        {activeTab === 'NGO' && (
           <div style={{
             backgroundColor: '#1e293b',
             borderRadius: 22,
-            border: '1px solid #334155',
-            padding: '32px',
-            maxWidth: 420,
-            margin: '0 auto',
-            textAlign: 'center'
+            border: '2px solid #334155',
+            padding: '30px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
           }}>
-            <Shield size={40} className="text-amber-400" style={{ margin: '0 auto 12px' }} />
-            <h2 style={{ fontSize: 20, fontWeight: 900, color: '#f8fafc', marginBottom: 6 }}>
-              Municipal Administration Login
-            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(2, 132, 199, 0.2)', color: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
+                🤝
+              </div>
+              <div>
+                <h3 style={{ fontSize: 20, fontWeight: 900, color: '#f8fafc', margin: 0 }}>NGO & Shelter Portal</h3>
+                <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>Register or login your food bank / shelter</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleNgoSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#cbd5e1', display: 'block', marginBottom: 6 }}>
+                  NGO / Shelter / Foundation Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Hope Shelter & Food Bank"
+                  value={ngoName}
+                  onChange={(e) => setNgoName(e.target.value)}
+                  style={{ width: '100%', padding: '11px 14px', borderRadius: 10, backgroundColor: '#0f172a', border: '1px solid #334155', color: '#fff', fontSize: 14 }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#cbd5e1', display: 'block', marginBottom: 6 }}>
+                    Contact Phone *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+91 98765 43210"
+                    value={ngoPhone}
+                    onChange={(e) => setNgoPhone(e.target.value)}
+                    style={{ width: '100%', padding: '11px 14px', borderRadius: 10, backgroundColor: '#0f172a', border: '1px solid #334155', color: '#fff', fontSize: 14 }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#cbd5e1', display: 'block', marginBottom: 6 }}>
+                    Shelter Location Address
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Ring Road Shelter Complex"
+                    value={ngoAddress}
+                    onChange={(e) => setNgoAddress(e.target.value)}
+                    style={{ width: '100%', padding: '11px 14px', borderRadius: 10, backgroundColor: '#0f172a', border: '1px solid #334155', color: '#fff', fontSize: 14 }}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                style={{
+                  backgroundColor: '#0284c7',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: 12,
+                  padding: '13px',
+                  fontSize: 14,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  marginTop: 6
+                }}
+              >
+                <LogIn size={16} />
+                <span>Enter NGO Portal ➔</span>
+              </button>
+            </form>
+
+            {/* Quick Sign-In with Verified NGO Accounts */}
+            <div style={{ borderTop: '1px solid #334155', marginTop: 22, paddingTop: 16 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                ⚡ Quick Sign-in (Verified NGO Accounts):
+              </span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8, marginTop: 10 }}>
+                {DEFAULT_RECEIVERS.map((ngo) => (
+                  <button
+                    key={ngo.id}
+                    type="button"
+                    onClick={() => loginUser(ngo)}
+                    style={{
+                      backgroundColor: '#0f172a',
+                      border: '1px solid #334155',
+                      borderRadius: 10,
+                      padding: '10px 12px',
+                      color: '#f8fafc',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      textAlign: 'left'
+                    }}
+                    className="card-hover-effect"
+                  >
+                    <span>🤝 {ngo.name}</span>
+                    <ArrowRight size={13} className="text-sky-400" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* 3. MUNICIPAL ADMIN LOGIN CARD */}
+        {activeTab === 'ADMIN' && (
+          <div style={{
+            backgroundColor: '#1e293b',
+            borderRadius: 22,
+            border: '2px solid #334155',
+            padding: '30px',
+            maxWidth: 480,
+            margin: '0 auto',
+            textAlign: 'center',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+          }}>
+            <Shield size={42} className="text-amber-400" style={{ margin: '0 auto 12px' }} />
+            <h3 style={{ fontSize: 20, fontWeight: 900, color: '#f8fafc', marginBottom: 6 }}>
+              Municipal City Administration
+            </h3>
             <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 20 }}>
-              Enter City Admin Passcode (Demo: 1234 or leave blank)
+              Enter City Admin Passcode (Default: 1234 or leave blank)
             </p>
 
-            <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <form onSubmit={handleAdminSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <input
                 type="password"
-                placeholder="Enter Passcode..."
+                placeholder="Passcode: 1234"
                 value={adminPasscode}
                 onChange={(e) => setAdminPasscode(e.target.value)}
                 style={{ width: '100%', padding: '12px 14px', borderRadius: 10, backgroundColor: '#0f172a', border: '1px solid #334155', color: '#fff', fontSize: 14, textAlign: 'center', letterSpacing: '0.2em' }}
               />
 
-              <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-                <button
-                  type="button"
-                  onClick={() => setAuthMode('ROLE_SELECT')}
-                  className="btn-secondary"
-                  style={{ flex: 1, backgroundColor: '#0f172a', color: '#f1f5f9', borderColor: '#334155' }}
-                >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  className="btn-amber"
-                  style={{ flex: 2 }}
-                >
-                  Verify & Enter
-                </button>
-              </div>
+              <button
+                type="submit"
+                className="btn-amber"
+                style={{ width: '100%', padding: '12px', fontSize: 14, borderRadius: 10 }}
+              >
+                <Lock size={15} />
+                <span>Verify & Enter Operations Hub</span>
+              </button>
             </form>
           </div>
         )}

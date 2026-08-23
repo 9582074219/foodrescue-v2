@@ -128,8 +128,9 @@ export default function Navbar() {
             </button>
           </div>
         ) : (
-          <div style={{ fontSize: 13, color: '#94a3b8', fontWeight: 600 }}>
-            ⚡ Hackathon Demo Mode
+          <div style={{ fontSize: 13, color: '#34d399', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }} />
+            <span>Real-Time Network Active</span>
           </div>
         )}
 

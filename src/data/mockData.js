@@ -280,7 +280,7 @@ export const INITIAL_CHAT_MESSAGES = {
   ]
 };
 
-export const DEMO_PRESETS = [
+export const FOOD_TEMPLATES = [
   {
     id: "preset_1",
     title: "🎉 Banquet Wedding Surplus",
