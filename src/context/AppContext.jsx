@@ -23,9 +23,14 @@ export function AppProvider({ children }) {
 
   // Donations Database (Synchronized)
   const [donations, setDonations] = useState(() => {
-    const saved = localStorage.getItem('foodrescue_v2_donations');
+    const saved = localStorage.getItem('foodrescue_v2_donations_v3');
     return saved ? JSON.parse(saved) : INITIAL_DONATIONS;
   });
+
+  // Keep localStorage updated
+  useEffect(() => {
+    localStorage.setItem('foodrescue_v2_donations_v3', JSON.stringify(donations));
+  }, [donations]);
 
   // Chat Message Database
   const [chatMessages, setChatMessages] = useState(() => {
