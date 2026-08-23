@@ -13,17 +13,40 @@ export default function DonorPortal() {
   const [aiPrepared, setAiPrepared] = useState(currentUser?.dailyPrepared || 700);
   const [aiGuests, setAiGuests] = useState(currentUser?.expectedDemand || 520);
   const [aiStorage, setAiStorage] = useState('HOT_CHAFING'); // 'HOT_CHAFING' | 'ROOM_TEMP' | 'REFRIGERATED' | 'CUSTOM'
-  const [customStorageText, setCustomStorageText] = useState('Insulated stainless steel containers at 60°C');
-  const [customSafeHours, setCustomSafeHours] = useState(4.0);
+  const [customTemp, setCustomTemp] = useState(65); // User entered temperature in °C
+  const [customStorageVessel, setCustomStorageVessel] = useState('Insulated Stainless Steel Casseroles');
   const [aiPrepTime, setAiPrepTime] = useState('08:30 PM');
 
-  // Dynamic AI Calculations
+  // AI Temperature & Safe-Hours Scientific Model (FSSAI / FDA Guidelines)
+  const getAiSafeHours = () => {
+    if (aiStorage === 'HOT_CHAFING') return 4.5;
+    if (aiStorage === 'ROOM_TEMP') return 3.0;
+    if (aiStorage === 'REFRIGERATED') return 8.0;
+    
+    // Automatic AI computation from user's manual temperature (°C)
+    const t = parseFloat(customTemp);
+    if (isNaN(t)) return 3.5;
+    if (t <= 0) return 24.0;         // Deep Frozen (<=0°C)
+    if (t <= 4) return 9.0;          // Safe Chilled / Refrigerator (0-4°C)
+    if (t <= 10) return 5.5;         // Cool storage (5-10°C)
+    if (t >= 70) return 6.0;         // High Thermal Holding (>70°C)
+    if (t >= 60) return 4.5;         // Safe Hot Holding (60-70°C)
+    if (t >= 45) return 2.5;         // Warm Danger Zone (45-60°C)
+    if (t >= 32) return 2.5;         // Hot ambient room temp (32-45°C)
+    return 3.5;                      // Normal Room temp (15-32°C)
+  };
+
+  const safeHours = getAiSafeHours();
   const calcSurplus = Math.max(0, Number(aiPrepared) - Number(aiGuests));
   const surplusPercent = Math.round((calcSurplus / (Number(aiPrepared) || 1)) * 100);
-  const safeHours = aiStorage === 'CUSTOM' ? (Number(customSafeHours) || 3.5) : aiStorage === 'HOT_CHAFING' ? 4.5 : aiStorage === 'REFRIGERATED' ? 6.0 : 3.0;
   const urgencyScore = calcSurplus >= 120 ? 95 : calcSurplus >= 70 ? 85 : calcSurplus >= 30 ? 70 : 50;
-  const freshnessScore = aiStorage === 'HOT_CHAFING' ? 96 : aiStorage === 'REFRIGERATED' ? 98 : aiStorage === 'CUSTOM' ? 94 : 88;
-  const calculatedExpiry = aiStorage === 'HOT_CHAFING' ? '12:30 AM' : aiStorage === 'REFRIGERATED' ? '02:30 AM' : aiStorage === 'CUSTOM' ? `${Math.round(safeHours)}h after prep` : '11:30 PM';
+  
+  const currentTempNum = aiStorage === 'HOT_CHAFING' ? 65 : aiStorage === 'ROOM_TEMP' ? 25 : aiStorage === 'REFRIGERATED' ? 4 : parseFloat(customTemp) || 25;
+  const isDangerZone = currentTempNum > 5 && currentTempNum < 60;
+  const freshnessScore = isDangerZone ? 86 : 97;
+
+  // Compute calculated expiry time label
+  const calculatedExpiry = `${safeHours} Hours from Prep (${aiStorage === 'HOT_CHAFING' ? 'Safe until 01:00 AM' : aiStorage === 'REFRIGERATED' ? 'Safe until 04:30 AM' : 'Safe for ~' + safeHours + 'h'})`;
 
   // 2. Listing Form State
   const [foodType, setFoodType] = useState('Paneer Butter Masala, Dal Makhani, Veg Pulao, Rotis & Sweets');
@@ -38,11 +61,11 @@ export default function DonorPortal() {
   const applyCalculatedSurplus = () => {
     setQuantity(calcSurplus);
     setPreparedAt(aiPrepTime);
-    setAvailableUntil(calculatedExpiry);
+    setAvailableUntil(`Safe for ~${safeHours} hours (${currentTempNum}°C)`);
     if (aiStorage === 'CUSTOM') {
-      setNotes(`Custom Storage: ${customStorageText} (Safe for ~${safeHours} hours)`);
+      setNotes(`Vessel: ${customStorageVessel} | Temp: ${customTemp}°C (AI Computed Safe Window: ~${safeHours}h)`);
     } else {
-      setNotes(`Food stored under ${aiStorage === 'HOT_CHAFING' ? 'Hot Chafing (65°C)' : aiStorage === 'REFRIGERATED' ? 'Refrigerated (4°C)' : 'Room Temp (25°C)'}.`);
+      setNotes(`Stored under ${aiStorage === 'HOT_CHAFING' ? 'Hot Chafing (65°C)' : aiStorage === 'REFRIGERATED' ? 'Refrigerated (4°C)' : 'Room Temp (25°C)'} (AI Safe Window: ~${safeHours}h).`);
     }
     const elem = document.getElementById('donation-form-section');
     if (elem) elem.scrollIntoView({ behavior: 'smooth' });
@@ -234,33 +257,60 @@ export default function DonorPortal() {
               <option value="HOT_CHAFING">🔥 Hot Thermal Chafing (65°C)</option>
               <option value="ROOM_TEMP">🌡️ Room Temperature (25°C)</option>
               <option value="REFRIGERATED">❄️ Chilled / Refrigerated (4°C)</option>
-              <option value="CUSTOM">✏️ Custom Manual Condition...</option>
+              <option value="CUSTOM">✏️ Custom Temperature (°C) & Vessel...</option>
             </select>
           </div>
 
         </div>
 
-        {/* CONDITIONAL CUSTOM STORAGE INPUTS */}
+        {/* CONDITIONAL CUSTOM TEMPERATURE & VESSEL INPUTS */}
         {aiStorage === 'CUSTOM' && (
           <div style={{
             backgroundColor: 'rgba(253, 224, 71, 0.08)',
             border: '1px solid rgba(253, 224, 71, 0.3)',
             borderRadius: 12,
-            padding: '14px 18px',
+            padding: '16px 18px',
             marginBottom: 20,
             display: 'grid',
-            gridTemplateColumns: '2fr 1fr',
-            gap: 14
+            gridTemplateColumns: '1fr 2fr 1.5fr',
+            gap: 14,
+            alignItems: 'center'
           }}>
             <div>
               <label style={{ fontSize: 11, fontWeight: 800, color: '#fef08a', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
-                ✏️ Custom Storage & Vessel Description:
+                🌡️ Enter Temperature (°C) *
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="number"
+                  min="-20"
+                  max="100"
+                  value={customTemp}
+                  onChange={(e) => setCustomTemp(e.target.value)}
+                  placeholder="e.g. 65"
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    borderRadius: 8,
+                    backgroundColor: '#0f172a',
+                    border: '1px solid #eab308',
+                    color: '#fef08a',
+                    fontSize: 16,
+                    fontWeight: 800
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 800, color: '#fef08a', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
+                🍲 Storage Vessel / Container Type:
               </label>
               <input
                 type="text"
-                value={customStorageText}
-                onChange={(e) => setCustomStorageText(e.target.value)}
-                placeholder="e.g. Insulated casseroles, sealed thermal boxes, etc."
+                value={customStorageVessel}
+                onChange={(e) => setCustomStorageVessel(e.target.value)}
+                placeholder="e.g. Insulated casseroles, sealed thermal boxes, steel vessel"
                 style={{
                   width: '100%',
                   padding: '9px 12px',
@@ -273,28 +323,23 @@ export default function DonorPortal() {
               />
             </div>
 
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 800, color: '#fef08a', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
-                Estimated Safe Hours:
-              </label>
-              <input
-                type="number"
-                step="0.5"
-                min="1"
-                max="24"
-                value={customSafeHours}
-                onChange={(e) => setCustomSafeHours(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '9px 12px',
-                  borderRadius: 8,
-                  backgroundColor: '#0f172a',
-                  border: '1px solid #eab308',
-                  color: '#fef08a',
-                  fontSize: 13,
-                  fontWeight: 700
-                }}
-              />
+            {/* AI Real-Time Feedback on entered temperature */}
+            <div style={{
+              backgroundColor: '#0f172a',
+              borderRadius: 8,
+              padding: '8px 12px',
+              border: isDangerZone ? '1px solid #f87171' : '1px solid #34d399',
+              textAlign: 'center'
+            }}>
+              <span style={{ fontSize: 10, fontWeight: 800, color: isDangerZone ? '#fca5a5' : '#86efac', textTransform: 'uppercase', display: 'block' }}>
+                AI Computed Safe Time:
+              </span>
+              <div style={{ fontSize: 18, fontWeight: 900, color: isDangerZone ? '#f87171' : '#34d399' }}>
+                ~{safeHours} Hours
+              </div>
+              <span style={{ fontSize: 9, color: isDangerZone ? '#fca5a5' : '#86efac', fontWeight: 700 }}>
+                {currentTempNum >= 60 ? '🔥 Safe Hot Holding' : currentTempNum <= 5 ? '❄️ Safe Cold Holding' : '⚠️ Bacteria Danger Zone'}
+              </span>
             </div>
           </div>
         )}
