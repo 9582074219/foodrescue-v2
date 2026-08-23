@@ -109,7 +109,7 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* Logout / Switch Role Button */}
+            {/* Log Out Button */}
             <button
               onClick={logoutUser}
               className="btn-secondary"
@@ -121,10 +121,10 @@ export default function Navbar() {
                 fontSize: 12,
                 borderRadius: 10
               }}
-              title="Logout & Switch Role"
+              title="Log Out"
             >
               <LogOut size={14} />
-              <span>Switch Role</span>
+              <span>Log Out</span>
             </button>
           </div>
         ) : (

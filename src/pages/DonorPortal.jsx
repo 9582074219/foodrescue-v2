@@ -150,35 +150,6 @@ export default function DonorPortal() {
             </div>
           </div>
 
-          {/* Quick Food Templates */}
-          <div style={{ marginBottom: 18, backgroundColor: '#f8fafc', padding: '12px 14px', borderRadius: 12, border: '1px solid #e2e8f0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, fontSize: 11, fontWeight: 800, color: '#475569', textTransform: 'uppercase' }}>
-              <Wand2 size={13} className="text-amber-500" />
-              <span>⚡ Quick Food Templates:</span>
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {FOOD_TEMPLATES.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => loadPreset(p)}
-                  style={{
-                    padding: '5px 10px',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    borderRadius: 8,
-                    backgroundColor: foodType === p.foodType ? '#ecfdf5' : '#ffffff',
-                    color: foodType === p.foodType ? '#047857' : '#334155',
-                    border: foodType === p.foodType ? '1px solid #10b981' : '1px solid #cbd5e1',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {p.title}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
