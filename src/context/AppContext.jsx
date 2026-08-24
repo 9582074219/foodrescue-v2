@@ -224,9 +224,6 @@ export function AppProvider({ children }) {
 
     triggerConfetti();
     showToast(`Donation #${donationId} accepted! Locked for your organization.`, 'success');
-
-    // Auto-open chat modal for seamless communication
-    setActiveChatDonation(targetDonation);
   };
 
   // 4. Lifecycle: Mark Food Collected
@@ -315,7 +312,9 @@ export function AppProvider({ children }) {
         createAndBroadcastDonation,
         acceptDonation,
         markFoodCollected,
+        collectDonation: markFoodCollected,
         markDistributedToNeedy,
+        distributeAndComplete: markDistributedToNeedy,
         chatMessages,
         sendChatMessage,
         activeChatDonation,

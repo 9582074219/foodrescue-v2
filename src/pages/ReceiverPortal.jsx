@@ -10,8 +10,8 @@ export default function ReceiverPortal() {
     currentUser,
     donations,
     acceptDonation,
-    collectDonation,
-    distributeAndComplete,
+    markFoodCollected,
+    markDistributedToNeedy,
     setActiveChatDonation
   } = useApp();
 
@@ -81,7 +81,7 @@ export default function ReceiverPortal() {
       {/* KPI Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
         <StatCard
-          title="Inbound Surplus Stream"
+          title="Nearby Surplus Food"
           value={availableDonations.length}
           unit="listings"
           subtitle="Nearby food awaiting rescue"
@@ -90,7 +90,7 @@ export default function ReceiverPortal() {
           trend="Live Queue"
         />
         <StatCard
-          title="Active Claimed Rescues"
+          title="Active Rescues"
           value={myActivePickups.length}
           unit="in transit"
           subtitle={`${totalMealsClaimed} meals being collected`}
@@ -99,7 +99,7 @@ export default function ReceiverPortal() {
           trend="Live Dispatch"
         />
         <StatCard
-          title="Total Meals Rescued"
+          title="Total Meals Distributed"
           value={totalMealsRescued}
           unit="meals"
           subtitle="Safely distributed"
@@ -109,16 +109,16 @@ export default function ReceiverPortal() {
         />
       </div>
 
-      {/* 2-COLUMN: LIVE INBOUND STREAM (LEFT) + MY CLAIMED RESCUES (RIGHT) */}
+      {/* 2-COLUMN: NEARBY SURPLUS FOOD (LEFT) + MY ACTIVE RESCUES (RIGHT) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: 24 }}>
         
-        {/* LEFT: LIVE NEARBY INBOUND SURPLUS FEED */}
+        {/* LEFT: NEARBY SURPLUS FOOD */}
         <div className="card">
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18, borderBottom: '1px solid #e2e8f0', paddingBottom: 14 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <h3 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
-                  Nearby Surplus Food Stream
+                  Nearby Surplus Food
                 </h3>
                 <span className="pulse-urgent" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#f43f5e', display: 'inline-block' }} />
               </div>
@@ -227,13 +227,13 @@ export default function ReceiverPortal() {
           )}
         </div>
 
-        {/* RIGHT: MY CLAIMED RESCUES & LIVE DISPATCH */}
+        {/* RIGHT: MY ACTIVE RESCUES & LIVE DISPATCH */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           
           <div className="card">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <h3 style={{ fontSize: 17, fontWeight: 900, color: '#0f172a' }}>
-                My Claimed Rescues ({myActivePickups.length})
+                My Active Rescues ({myActivePickups.length})
               </h3>
               <span className="badge-normal" style={{ fontSize: 11 }}>
                 In Progress
@@ -288,16 +288,19 @@ export default function ReceiverPortal() {
                       </p>
                     </div>
 
-                    {/* Telemetric Route Map */}
+                    {/* 3-Waypoints Telemetric Route Map */}
                     <RouteMap
-                      from={item.donorAddress}
-                      to={currentUser?.address || 'Shelter Facility'}
+                      donorAddress={item.donorAddress}
+                      shelterAddress={currentUser?.address || 'Hope Shelter Facility, Ring Road'}
+                      needyAddress="Slum Cluster & Night Shelter, Ward 12"
                       status={item.status}
+                      etaMinutes={item.status === 'ACCEPTED' ? 6 : 4}
                     />
 
                     {/* Action Flow */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                       <button
+                        type="button"
                         onClick={() => setActiveChatDonation(item)}
                         className="btn-secondary"
                         style={{ padding: '10px', fontSize: 13, borderRadius: 10 }}
@@ -308,7 +311,8 @@ export default function ReceiverPortal() {
 
                       {item.status === 'ACCEPTED' ? (
                         <button
-                          onClick={() => collectDonation(item.id)}
+                          type="button"
+                          onClick={() => markFoodCollected(item.id)}
                           className="btn-primary"
                           style={{ padding: '10px', fontSize: 13, borderRadius: 10, backgroundColor: '#0284c7', borderColor: '#0284c7' }}
                         >
@@ -317,7 +321,8 @@ export default function ReceiverPortal() {
                         </button>
                       ) : (
                         <button
-                          onClick={() => distributeAndComplete(item.id)}
+                          type="button"
+                          onClick={() => markDistributedToNeedy(item.id)}
                           className="btn-primary"
                           style={{ padding: '10px', fontSize: 13, borderRadius: 10 }}
                         >
@@ -332,10 +337,10 @@ export default function ReceiverPortal() {
             )}
           </div>
 
-          {/* BENEFICIARY AUDIT LOG */}
+          {/* DISTRIBUTION HISTORY */}
           <div className="card">
             <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>
-              📜 Completed Distribution Log ({myCompletedRescues.length})
+              📜 Distribution History ({myCompletedRescues.length})
             </h3>
             {myCompletedRescues.length === 0 ? (
               <p style={{ fontSize: 13, color: '#94a3b8' }}>
