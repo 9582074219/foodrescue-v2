@@ -23,13 +23,25 @@ export function AppProvider({ children }) {
 
   // Donations Database (Synchronized)
   const [donations, setDonations] = useState(() => {
-    const saved = localStorage.getItem('foodrescue_v2_donations_v3');
-    return saved ? JSON.parse(saved) : INITIAL_DONATIONS;
+    const saved = localStorage.getItem('foodrescue_v2_donations_v5');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        const fallbackDistances = ['1.5 km away', '3.2 km away', '2.4 km away', '4.0 km away', '1.8 km away', '3.5 km away'];
+        return parsed.map((d, i) => ({
+          ...d,
+          distanceLabel: d.distanceLabel || fallbackDistances[i % fallbackDistances.length]
+        }));
+      } catch (e) {
+        return INITIAL_DONATIONS;
+      }
+    }
+    return INITIAL_DONATIONS;
   });
 
   // Keep localStorage updated
   useEffect(() => {
-    localStorage.setItem('foodrescue_v2_donations_v3', JSON.stringify(donations));
+    localStorage.setItem('foodrescue_v2_donations_v5', JSON.stringify(donations));
   }, [donations]);
 
   // Chat Message Database

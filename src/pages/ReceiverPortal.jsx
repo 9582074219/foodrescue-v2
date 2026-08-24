@@ -154,32 +154,36 @@ export default function ReceiverPortal() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {availableDonations.map((item) => (
-                <div
-                  key={item.id}
-                  className="card-hover-effect"
-                  style={{
-                    border: '2px solid #e2e8f0',
-                    borderRadius: 16,
-                    padding: '18px',
-                    backgroundColor: '#ffffff',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 12
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: '#047857', padding: '2px 8px', backgroundColor: '#ecfdf5', borderRadius: 6 }}>
-                        #{item.id}
-                      </span>
-                      <UrgencyBadge score={item.urgencyScore} level={item.urgencyLevel} />
-                    </div>
+              {availableDonations.map((item, index) => {
+                const fallbackDistances = ['1.5 km away', '3.2 km away', '2.4 km away', '4.0 km away', '1.8 km away', '3.5 km away'];
+                const distanceDisplay = item.distanceLabel || fallbackDistances[index % fallbackDistances.length];
 
-                    <span style={{ fontSize: 12, fontWeight: 800, color: '#0284c7' }}>
-                      📍 ~{item.distanceLabel || '2.4 km away'}
-                    </span>
-                  </div>
+                return (
+                  <div
+                    key={item.id}
+                    className="card-hover-effect"
+                    style={{
+                      border: '2px solid #e2e8f0',
+                      borderRadius: 16,
+                      padding: '18px',
+                      backgroundColor: '#ffffff',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 12
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: '#047857', padding: '2px 8px', backgroundColor: '#ecfdf5', borderRadius: 6 }}>
+                          #{item.id}
+                        </span>
+                        <UrgencyBadge score={item.urgencyScore} level={item.urgencyLevel} />
+                      </div>
+
+                      <span style={{ fontSize: 12, fontWeight: 800, color: '#0284c7' }}>
+                        📍 ~{distanceDisplay}
+                      </span>
+                    </div>
 
                   <div>
                     <h4 style={{ fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
@@ -213,8 +217,9 @@ export default function ReceiverPortal() {
                     <CheckCircle2 size={17} />
                     <span>Accept & Claim This Donation ➔</span>
                   </button>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
