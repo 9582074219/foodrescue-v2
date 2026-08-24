@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Truck, CheckCircle2, Clock, MapPin, AlertTriangle, MessageSquare, Phone, ShieldCheck, HeartHandshake, ArrowRight, Target, Sparkles } from 'lucide-react';
+import { Truck, CheckCircle2, Clock, MapPin, AlertTriangle, MessageSquare, Phone, HeartHandshake } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import UrgencyBadge from '../components/UrgencyBadge';
 import RouteMap from '../components/RouteMap';
@@ -18,29 +18,21 @@ export default function ReceiverPortal() {
   const [filterUrgency, setFilterUrgency] = useState('ALL'); // 'ALL' | 'URGENT' | 'MEDIUM'
 
   // Filter donations
-  // 1. Available stream (either broadcast to all OR targeted to this NGO)
   const availableDonations = donations.filter(d => {
     if (d.status !== 'AVAILABLE') return false;
-    if (d.targetNgoId && d.targetNgoId !== currentUser?.id && d.targetNgoName !== currentUser?.name) {
-      // Directed to another NGO specifically
-      return false;
-    }
     if (filterUrgency === 'URGENT') return d.urgencyScore >= 80;
     if (filterUrgency === 'MEDIUM') return d.urgencyScore < 80;
     return true;
   });
 
-  // 2. Claimed rescues by this NGO
   const myActivePickups = donations.filter(
     d => (d.status === 'ACCEPTED' || d.status === 'COLLECTED') && (d.matchedNgoId === currentUser?.id || d.matchedNgoName === currentUser?.name)
   );
 
-  // 3. Completed history by this NGO
   const myCompletedRescues = donations.filter(
     d => d.status === 'COMPLETED' && (d.matchedNgoId === currentUser?.id || d.matchedNgoName === currentUser?.name)
   );
 
-  // Statistics
   const totalMealsClaimed = myActivePickups.reduce((acc, curr) => acc + curr.quantity, 0);
   const totalMealsRescued = myCompletedRescues.reduce((acc, curr) => acc + curr.quantity, 0);
 
@@ -66,7 +58,7 @@ export default function ReceiverPortal() {
           </div>
         </div>
 
-        {/* Current Need Badge */}
+        {/* Shelter Capacity Badge */}
         <div style={{
           backgroundColor: '#eff6ff',
           border: '1px solid #bfdbfe',
@@ -86,7 +78,7 @@ export default function ReceiverPortal() {
         </div>
       </div>
 
-      {/* KPI Stats */}
+      {/* KPI Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
         <StatCard
           title="Inbound Surplus Stream"
@@ -95,7 +87,7 @@ export default function ReceiverPortal() {
           subtitle="Nearby food awaiting rescue"
           icon={AlertTriangle}
           color="#f59e0b"
-          trend="Live Radar"
+          trend="Live Queue"
         />
         <StatCard
           title="Active Claimed Rescues"
@@ -104,7 +96,7 @@ export default function ReceiverPortal() {
           subtitle={`${totalMealsClaimed} meals being collected`}
           icon={Truck}
           color="#f43f5e"
-          trend="Live Queue"
+          trend="Live Dispatch"
         />
         <StatCard
           title="Total Meals Rescued"
@@ -113,11 +105,11 @@ export default function ReceiverPortal() {
           subtitle="Safely distributed"
           icon={CheckCircle2}
           color="#10b981"
-          trend="+100% On-Time"
+          trend="+100% Verified"
         />
       </div>
 
-      {/* 2-COLUMN: LIVE INBOUND STREAM (LEFT) + MY ACTIVE RESCUES & ROUTE (RIGHT) */}
+      {/* 2-COLUMN: LIVE INBOUND STREAM (LEFT) + MY CLAIMED RESCUES (RIGHT) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: 24 }}>
         
         {/* LEFT: LIVE NEARBY INBOUND SURPLUS FEED */}
@@ -131,7 +123,7 @@ export default function ReceiverPortal() {
                 <span className="pulse-urgent" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#f43f5e', display: 'inline-block' }} />
               </div>
               <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
-                Live broadcasts from banquet halls, restaurants, caterers & canteens
+                Live broadcasts from banquet halls, restaurants, and canteens
               </p>
             </div>
 
@@ -175,29 +167,21 @@ export default function ReceiverPortal() {
                   key={item.id}
                   className="card-hover-effect"
                   style={{
-                    border: item.targetNgoId ? '2px solid #0284c7' : '2px solid #e2e8f0',
+                    border: '2px solid #e2e8f0',
                     borderRadius: 16,
                     padding: '18px',
-                    backgroundColor: item.targetNgoId ? '#f0f9ff' : '#ffffff',
+                    backgroundColor: '#ffffff',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 12
                   }}
                 >
-                  {/* Top Bar with Urgency & Direct Request Badge */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 13, fontWeight: 800, color: '#047857', padding: '2px 8px', backgroundColor: '#ecfdf5', borderRadius: 6 }}>
                         #{item.id}
                       </span>
                       <UrgencyBadge score={item.urgencyScore} level={item.urgencyLevel} />
-                      
-                      {item.targetNgoName && (
-                        <span style={{ fontSize: 11, fontWeight: 800, color: '#0369a1', backgroundColor: '#e0f2fe', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <Target size={12} />
-                          <span>Direct Request for You</span>
-                        </span>
-                      )}
                     </div>
 
                     <span style={{ fontSize: 12, fontWeight: 800, color: '#0284c7' }}>
@@ -205,41 +189,18 @@ export default function ReceiverPortal() {
                     </span>
                   </div>
 
-                  {/* Food Details */}
                   <div>
                     <h4 style={{ fontSize: 16, fontWeight: 900, color: '#0f172a' }}>
                       {item.foodType}
                     </h4>
-                    
-                    {/* Donor Name & Contact Phone */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginTop: 6, fontSize: 13, color: '#475569' }}>
-                      <span>🏢 <strong>{item.donorName}</strong> ({item.foodCategory})</span>
-                      <span>•</span>
-                      <a
-                        href={`tel:${item.donorPhone || '+91 98220 54321'}`}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          color: '#0284c7',
-                          fontWeight: 700,
-                          textDecoration: 'none',
-                          backgroundColor: '#e0f2fe',
-                          padding: '2px 8px',
-                          borderRadius: 6
-                        }}
-                      >
-                        <Phone size={12} />
-                        <span>{item.donorPhone || '+91 98220 54321'}</span>
-                      </a>
-                    </div>
-
-                    <p style={{ fontSize: 12, color: '#64748b', margin: '4px 0 0' }}>
-                      📍 Pickup Address: {item.donorAddress}
+                    <p style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>
+                      🏢 <strong>{item.donorName}</strong> ({item.foodCategory}) • 📞 <strong>{item.donorPhone || '+91 98220 54321'}</strong>
+                    </p>
+                    <p style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                      📍 {item.donorAddress}
                     </p>
                   </div>
 
-                  {/* Quantity & Safe Window */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, backgroundColor: '#f8fafc', padding: '10px 12px', borderRadius: 10, fontSize: 12, color: '#475569' }}>
                     <div>
                       <span style={{ color: '#64748b' }}>Quantity:</span>
@@ -299,52 +260,35 @@ export default function ReceiverPortal() {
                       gap: 14
                     }}
                   >
-                    {/* Header */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div>
-                        <span style={{ fontSize: 12, fontWeight: 800, color: '#166534', backgroundColor: '#dcfce7', padding: '2px 8px', borderRadius: 6 }}>
-                          RESCUE CLAIMED #{item.id}
-                        </span>
-                        <h4 style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', marginTop: 4 }}>
-                          {item.foodType} ({item.quantity} Meals)
-                        </h4>
-                      </div>
-
-                      <span style={{ fontSize: 12, fontWeight: 800, color: item.status === 'COLLECTED' ? '#1e40af' : '#15803d' }}>
-                        {item.status === 'COLLECTED' ? '🚚 In Transit' : '⏱️ Pickup Dispatched'}
+                      <span style={{ fontSize: 13, fontWeight: 800, color: '#166534' }}>
+                        Rescue Dispatch #{item.id}
+                      </span>
+                      <span style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        padding: '3px 10px',
+                        borderRadius: 9999,
+                        backgroundColor: item.status === 'ACCEPTED' ? '#fef3c7' : '#dbeafe',
+                        color: item.status === 'ACCEPTED' ? '#b45309' : '#1e40af'
+                      }}>
+                        {item.status === 'ACCEPTED' ? '🚗 DISPATCH EN ROUTE' : '📦 FOOD COLLECTED'}
                       </span>
                     </div>
 
-                    {/* Donor Phone & Pickup info */}
-                    <div style={{ backgroundColor: '#ffffff', padding: '12px 14px', borderRadius: 10, border: '1px solid #dcfce7', fontSize: 13 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#0f172a', fontWeight: 800 }}>🏢 {item.donorName}</span>
-                        <a
-                          href={`tel:${item.donorPhone || '+91 98220 54321'}`}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            backgroundColor: '#ecfdf5',
-                            color: '#047857',
-                            padding: '4px 10px',
-                            borderRadius: 8,
-                            fontWeight: 800,
-                            fontSize: 12,
-                            textDecoration: 'none',
-                            border: '1px solid #a7f3d0'
-                          }}
-                        >
-                          <Phone size={13} />
-                          <span>{item.donorPhone || '+91 98220 54321'}</span>
-                        </a>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 900, color: '#0f172a' }}>
+                        {item.foodType}
                       </div>
-                      <p style={{ color: '#64748b', fontSize: 12, margin: '6px 0 0' }}>
-                        📍 {item.donorAddress}
+                      <p style={{ fontSize: 13, color: '#475569', marginTop: 2 }}>
+                        {item.quantity} Meals from <strong>{item.donorName}</strong>
+                      </p>
+                      <p style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                        📍 {item.donorAddress} • 📞 <strong>{item.donorPhone || '+91 98220 54321'}</strong>
                       </p>
                     </div>
 
-                    {/* Route Simulation */}
+                    {/* Telemetric Route Map */}
                     <RouteMap
                       from={item.donorAddress}
                       to={currentUser?.address || 'Shelter Facility'}
