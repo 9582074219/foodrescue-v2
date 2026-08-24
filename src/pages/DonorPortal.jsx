@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Sparkles, Utensils, PlusCircle, Clock, MapPin, Truck, AlertTriangle, CheckCircle2, MessageSquare, Award, ShieldCheck, ArrowRight, Thermometer, Sliders, Check } from 'lucide-react';
+import { Sparkles, Utensils, PlusCircle, Clock, MapPin, Truck, AlertTriangle, CheckCircle2, MessageSquare, Award, ShieldCheck, ArrowRight, Thermometer, Sliders, Check, Phone, Target, Radio } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import UrgencyBadge from '../components/UrgencyBadge';
 import RouteMap from '../components/RouteMap';
@@ -55,7 +55,15 @@ export default function DonorPortal() {
   const [preparedAt, setPreparedAt] = useState('08:30 PM');
   const [availableUntil, setAvailableUntil] = useState('12:30 AM');
   const [location, setLocation] = useState(currentUser?.address || 'Sector 29, Main City Corridor');
+  const [donorPhone, setDonorPhone] = useState(currentUser?.phone || '+91 98220 54321');
   const [notes, setNotes] = useState('Freshly prepared buffet food stored in stainless steel insulated containers.');
+  
+  // Target Recipient Option (Broadcast to All vs Specific NGO)
+  const [targetType, setTargetType] = useState('ALL'); // 'ALL' | 'SPECIFIC'
+  const [selectedNgoId, setSelectedNgoId] = useState(DEFAULT_RECEIVERS[0].id);
+
+  // History Filter
+  const [historyFilter, setHistoryFilter] = useState('ALL'); // 'ALL' | 'ACTIVE' | 'COMPLETED'
 
   // Apply AI Calculation into Form
   const applyCalculatedSurplus = () => {
@@ -63,7 +71,7 @@ export default function DonorPortal() {
     setPreparedAt(aiPrepTime);
     setAvailableUntil(`Safe for ~${safeHours} hours (${currentTempNum}°C)`);
     if (aiStorage === 'CUSTOM') {
-      setNotes(`Vessel: ${customStorageVessel} | Temp: ${customTemp}°C (AI Computed Safe Window: ~${safeHours}h)`);
+      setNotes(`Vessel: ${customStorageVessel} | Temp: ${customTemp}°C (AI Safe Window: ~${safeHours}h)`);
     } else {
       setNotes(`Stored under ${aiStorage === 'HOT_CHAFING' ? 'Hot Chafing (65°C)' : aiStorage === 'REFRIGERATED' ? 'Refrigerated (4°C)' : 'Room Temp (25°C)'} (AI Safe Window: ~${safeHours}h).`);
     }
@@ -72,12 +80,20 @@ export default function DonorPortal() {
   };
 
   // Filter donations for this donor
-  const donorDonations = donations.filter(d => d.donorId === currentUser?.id);
+  const donorDonations = donations.filter(d => d.donorId === currentUser?.id || d.donorName === currentUser?.name || d.donorId === 'donor_banquet');
   const activeDonations = donorDonations.filter(d => d.status !== 'COMPLETED');
   const completedDonations = donorDonations.filter(d => d.status === 'COMPLETED');
 
+  const filteredHistoryDonations = donorDonations.filter(d => {
+    if (historyFilter === 'ACTIVE') return d.status !== 'COMPLETED';
+    if (historyFilter === 'COMPLETED') return d.status === 'COMPLETED';
+    return true;
+  });
+
   const handleCreate = (e) => {
     e.preventDefault();
+    const targetedNgoObj = targetType === 'SPECIFIC' ? DEFAULT_RECEIVERS.find(n => n.id === selectedNgoId) : null;
+
     createAndBroadcastDonation({
       foodType,
       quantity,
@@ -85,8 +101,16 @@ export default function DonorPortal() {
       preparedAt,
       availableUntil,
       location,
-      notes
+      donorPhone,
+      notes,
+      targetNgoId: targetedNgoObj ? targetedNgoObj.id : null,
+      targetNgoName: targetedNgoObj ? targetedNgoObj.name : null
     });
+
+    // Scroll to history to see instant reflection
+    setTimeout(() => {
+      document.getElementById('donor-history-section')?.scrollIntoView({ behavior: 'smooth' });
+    }, 200);
   };
 
   return (
@@ -122,7 +146,7 @@ export default function DonorPortal() {
         </button>
       </div>
 
-      {/* 1. INTERACTIVE AI SURPLUS & SAFE-TIME PREDICTOR (FULLY EDITABLE) */}
+      {/* 1. INTERACTIVE AI SURPLUS & SAFE-TIME PREDICTOR */}
       <div className="card-dark" style={{ position: 'relative', overflow: 'hidden' }}>
         
         {/* Card Header */}
@@ -141,7 +165,7 @@ export default function DonorPortal() {
                 </span>
               </div>
               <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>
-                Edit your kitchen preparation numbers to forecast surplus and calculate exact safe-consumption hours in real-time.
+                Edit kitchen preparation numbers to forecast surplus and compute safe-consumption hours in real-time.
               </p>
             </div>
           </div>
@@ -280,26 +304,24 @@ export default function DonorPortal() {
               <label style={{ fontSize: 11, fontWeight: 800, color: '#fef08a', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
                 🌡️ Enter Temperature (°C) *
               </label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="number"
-                  min="-20"
-                  max="100"
-                  value={customTemp}
-                  onChange={(e) => setCustomTemp(e.target.value)}
-                  placeholder="e.g. 65"
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px',
-                    borderRadius: 8,
-                    backgroundColor: '#0f172a',
-                    border: '1px solid #eab308',
-                    color: '#fef08a',
-                    fontSize: 16,
-                    fontWeight: 800
-                  }}
-                />
-              </div>
+              <input
+                type="number"
+                min="-20"
+                max="100"
+                value={customTemp}
+                onChange={(e) => setCustomTemp(e.target.value)}
+                placeholder="e.g. 65"
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  borderRadius: 8,
+                  backgroundColor: '#0f172a',
+                  border: '1px solid #eab308',
+                  color: '#fef08a',
+                  fontSize: 16,
+                  fontWeight: 800
+                }}
+              />
             </div>
 
             <div>
@@ -447,12 +469,91 @@ export default function DonorPortal() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <PlusCircle className="text-emerald-600" size={20} />
               <h3 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
-                List Surplus Food & Broadcast
+                List Surplus Food & Donate
               </h3>
             </div>
           </div>
 
           <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            
+            {/* TARGET SELECTION: BROADCAST TO ALL VS SPECIFIC NGO */}
+            <div style={{
+              backgroundColor: '#f8fafc',
+              borderRadius: 12,
+              padding: '14px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <label style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', display: 'block', marginBottom: 8 }}>
+                🎯 Send Donation To:
+              </label>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setTargetType('ALL')}
+                  style={{
+                    padding: '9px 12px',
+                    borderRadius: 8,
+                    border: '1px solid',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    backgroundColor: targetType === 'ALL' ? '#0f172a' : '#ffffff',
+                    color: targetType === 'ALL' ? '#ffffff' : '#475569',
+                    borderColor: targetType === 'ALL' ? '#0f172a' : '#cbd5e1'
+                  }}
+                >
+                  <span>📡 All Nearby NGOs</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setTargetType('SPECIFIC')}
+                  style={{
+                    padding: '9px 12px',
+                    borderRadius: 8,
+                    border: '1px solid',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    backgroundColor: targetType === 'SPECIFIC' ? '#0284c7' : '#ffffff',
+                    color: targetType === 'SPECIFIC' ? '#ffffff' : '#475569',
+                    borderColor: targetType === 'SPECIFIC' ? '#0284c7' : '#cbd5e1'
+                  }}
+                >
+                  <Target size={14} />
+                  <span>Choose Specific NGO</span>
+                </button>
+              </div>
+
+              {targetType === 'SPECIFIC' && (
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: '#0369a1', display: 'block', marginBottom: 4 }}>
+                    Select Preferred Verified NGO:
+                  </label>
+                  <select
+                    value={selectedNgoId}
+                    onChange={(e) => setSelectedNgoId(e.target.value)}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #0284c7', fontSize: 13, backgroundColor: '#ffffff', color: '#0f172a', fontWeight: 700 }}
+                  >
+                    {DEFAULT_RECEIVERS.map((ngo) => (
+                      <option key={ngo.id} value={ngo.id}>
+                        🤝 {ngo.name} ({ngo.distanceLabel} • Capacity: {ngo.currentNeedMeals} Meals)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
                 Donor Category / Venue Type *
@@ -527,15 +628,30 @@ export default function DonorPortal() {
 
               <div>
                 <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
-                  Pickup Address
+                  Your Contact Phone *
                 </label>
                 <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  type="tel"
+                  required
+                  value={donorPhone}
+                  onChange={(e) => setDonorPhone(e.target.value)}
+                  placeholder="+91 98220 54321"
                   style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 13 }}
                 />
               </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>
+                Pickup Address *
+              </label>
+              <input
+                type="text"
+                required
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 13 }}
+              />
             </div>
 
             <div>
@@ -556,19 +672,19 @@ export default function DonorPortal() {
               style={{ width: '100%', padding: '13px', fontSize: 14, marginTop: 4, borderRadius: 12 }}
             >
               <Sparkles size={16} />
-              <span>Broadcast Surplus to Nearby NGOs 📡</span>
+              <span>{targetType === 'SPECIFIC' ? 'Send Direct Request to NGO 🎯' : 'Broadcast Surplus to Nearby NGOs 📡'}</span>
             </button>
           </form>
         </div>
 
-        {/* RIGHT: ACTIVE RESCUES & LIVE MATCH RADAR */}
+        {/* RIGHT: LIVE ACTIVE RESCUES & RADAR */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           
           {/* Active Orders List */}
           <div className="card">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <h3 style={{ fontSize: 17, fontWeight: 900, color: '#0f172a' }}>
-                Active Broadcasts & Rescues ({activeDonations.length})
+                Active Broadcasts & Pickups ({activeDonations.length})
               </h3>
               <span className="badge-blue" style={{ fontSize: 11 }}>
                 Live Stream
@@ -611,7 +727,7 @@ export default function DonorPortal() {
                         backgroundColor: item.status === 'ACCEPTED' ? '#dcfce7' : item.status === 'COLLECTED' ? '#dbeafe' : '#fef3c7',
                         color: item.status === 'ACCEPTED' ? '#15803d' : item.status === 'COLLECTED' ? '#1e40af' : '#b45309'
                       }}>
-                        {item.status === 'AVAILABLE' ? '📡 BROADCASTED' : item.status === 'ACCEPTED' ? '🤝 ACCEPTED BY NGO' : '🚚 IN TRANSIT'}
+                        {item.status === 'AVAILABLE' ? (item.targetNgoName ? `🎯 TARGETED: ${item.targetNgoName}` : '📡 BROADCASTED') : item.status === 'ACCEPTED' ? '🤝 CLAIMED BY NGO' : '🚚 IN TRANSIT'}
                       </span>
                     </div>
 
@@ -628,7 +744,9 @@ export default function DonorPortal() {
                     {item.status === 'AVAILABLE' && (
                       <div style={{ fontSize: 12, color: '#d97706', backgroundColor: '#fffbeb', padding: '8px 12px', borderRadius: 8, border: '1px solid #fef3c7', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <Clock size={14} />
-                        <span>Broadcast active across nearby verified shelters. Waiting for NGO to accept...</span>
+                        <span>
+                          {item.targetNgoName ? `Direct request sent to ${item.targetNgoName}. Waiting for acceptance...` : 'Broadcast active across nearby verified shelters. Waiting for NGO to accept...'}
+                        </span>
                       </div>
                     )}
 
@@ -697,7 +815,7 @@ export default function DonorPortal() {
                 >
                   <div>
                     <div style={{ fontWeight: 800, color: '#0f172a' }}>{ngo.name}</div>
-                    <span style={{ color: '#64748b' }}>📍 {ngo.distanceLabel} • Capacity: {ngo.currentNeedMeals} Meals</span>
+                    <span style={{ color: '#64748b' }}>📍 {ngo.distanceLabel} • Capacity: {ngo.currentNeedMeals} Meals • 📞 {ngo.phone}</span>
                   </div>
                   <span style={{ fontWeight: 800, color: '#059669', backgroundColor: '#ecfdf5', padding: '2px 8px', borderRadius: 6 }}>
                     {calculateMatchScore({ quantity: calcSurplus || 150, urgencyScore: urgencyScore }, ngo)}% Match
@@ -711,26 +829,57 @@ export default function DonorPortal() {
 
       </div>
 
-      {/* 3. COMPLETED DONATION HISTORY SECTION (WITH 80G CERTIFICATES) */}
-      <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      {/* 3. IMMEDIATE COMPLETE DONATION HISTORY & TRACKING (UPDATES INSTANTLY ON SENDING) */}
+      <div className="card" id="donor-history-section">
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14, marginBottom: 18, borderBottom: '1px solid #e2e8f0', paddingBottom: 14 }}>
           <div>
-            <h3 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
-              Completed Rescue History & 80G Tax Records ({completedDonations.length})
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
+                Donation History & Live Activity Log ({donorDonations.length})
+              </h3>
+              <span className="pulse-urgent" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }} />
+            </div>
             <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
-              Verified meals safely distributed to beneficiaries by partner NGOs
+              All donations created by your organization are automatically tracked in real-time below
             </p>
+          </div>
+
+          {/* Filter Pills */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {[
+              { id: 'ALL', label: `All (${donorDonations.length})` },
+              { id: 'ACTIVE', label: `Active (${activeDonations.length})` },
+              { id: 'COMPLETED', label: `Completed (${completedDonations.length})` }
+            ].map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setHistoryFilter(f.id)}
+                style={{
+                  padding: '5px 12px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  borderRadius: 8,
+                  border: '1px solid',
+                  cursor: 'pointer',
+                  backgroundColor: historyFilter === f.id ? '#0f172a' : '#ffffff',
+                  color: historyFilter === f.id ? '#ffffff' : '#64748b',
+                  borderColor: historyFilter === f.id ? '#0f172a' : '#cbd5e1'
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {completedDonations.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8', fontSize: 13 }}>
-            No completed history yet. Completed orders will appear here automatically with downloadable 80G tax certificates.
+        {filteredHistoryDonations.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '24px', color: '#94a3b8', fontSize: 13 }}>
+            No donations match this filter. Use the form above to post surplus food!
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {completedDonations.map((item) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {filteredHistoryDonations.map((item) => (
               <div
                 key={item.id}
                 style={{
@@ -739,38 +888,88 @@ export default function DonorPortal() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: 14,
-                  padding: '14px 18px',
-                  borderRadius: 12,
-                  backgroundColor: '#f8fafc',
-                  border: '1px solid #e2e8f0'
+                  padding: '16px 20px',
+                  borderRadius: 14,
+                  backgroundColor: item.status === 'COMPLETED' ? '#f8fafc' : item.status === 'ACCEPTED' ? '#f0fdf4' : item.status === 'COLLECTED' ? '#eff6ff' : '#ffffff',
+                  border: item.status === 'ACCEPTED' ? '1px solid #86efac' : item.status === 'COLLECTED' ? '1px solid #bfdbfe' : '1px solid #e2e8f0'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <CheckCircle2 size={20} />
+                {/* Left Info */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 10,
+                    backgroundColor: item.status === 'COMPLETED' ? '#ecfdf5' : item.status === 'ACCEPTED' ? '#dcfce7' : item.status === 'COLLECTED' ? '#dbeafe' : '#fef3c7',
+                    color: item.status === 'COMPLETED' ? '#059669' : item.status === 'ACCEPTED' ? '#166534' : item.status === 'COLLECTED' ? '#1e40af' : '#d97706',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 18
+                  }}>
+                    {item.status === 'COMPLETED' ? <CheckCircle2 size={22} /> : item.status === 'COLLECTED' ? <Truck size={22} /> : item.status === 'ACCEPTED' ? '🤝' : '📡'}
                   </div>
+
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
-                      {item.foodType}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 900, color: '#0f172a' }}>
+                        {item.foodType}
+                      </span>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: '#047857', backgroundColor: '#ecfdf5', padding: '1px 6px', borderRadius: 4 }}>
+                        #{item.id}
+                      </span>
                     </div>
-                    <span style={{ fontSize: 12, color: '#64748b' }}>
-                      {item.quantity} Meals • Distributed by <strong>{item.matchedNgoName || 'Hope Shelter'}</strong> • #{item.id}
-                    </span>
+
+                    <div style={{ fontSize: 12, color: '#64748b', marginTop: 2, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      <span>📦 <strong>{item.quantity} Meals</strong></span>
+                      <span>•</span>
+                      <span>⏱️ Safe until {item.availableUntil}</span>
+                      <span>•</span>
+                      <span>📍 {item.donorAddress}</span>
+                    </div>
+
+                    {item.matchedNgoName && (
+                      <div style={{ fontSize: 12, color: '#166534', fontWeight: 700, marginTop: 4 }}>
+                        🤝 Handled by: {item.matchedNgoName} {item.driverName && `(Driver: ${item.driverName})`}
+                      </div>
+                    )}
                   </div>
                 </div>
 
+                {/* Right Status Pill & Actions */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: '#059669' }}>
-                    ~{Math.round(item.quantity * 0.8)} kg CO2 Offset
+                  <span style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    padding: '4px 12px',
+                    borderRadius: 9999,
+                    backgroundColor: item.status === 'COMPLETED' ? '#dcfce7' : item.status === 'ACCEPTED' ? '#dcfce7' : item.status === 'COLLECTED' ? '#dbeafe' : '#fef3c7',
+                    color: item.status === 'COMPLETED' ? '#15803d' : item.status === 'ACCEPTED' ? '#15803d' : item.status === 'COLLECTED' ? '#1e40af' : '#b45309'
+                  }}>
+                    {item.status === 'AVAILABLE' ? (item.targetNgoName ? `🎯 SENT TO: ${item.targetNgoName}` : '📡 BROADCASTED') : item.status === 'ACCEPTED' ? '🤝 CLAIMED' : item.status === 'COLLECTED' ? '🚚 IN TRANSIT' : '✓ COMPLETED'}
                   </span>
-                  <button
-                    onClick={() => openCertificate(item)}
-                    className="btn-secondary"
-                    style={{ padding: '7px 14px', fontSize: 12, borderRadius: 8 }}
-                  >
-                    <Award size={14} className="text-amber-500" />
-                    <span>80G Certificate</span>
-                  </button>
+
+                  {(item.status === 'ACCEPTED' || item.status === 'COLLECTED') && (
+                    <button
+                      onClick={() => setActiveChatDonation(item)}
+                      className="btn-primary"
+                      style={{ padding: '6px 12px', fontSize: 12, borderRadius: 8 }}
+                    >
+                      <MessageSquare size={14} />
+                      <span>Chat</span>
+                    </button>
+                  )}
+
+                  {item.status === 'COMPLETED' && (
+                    <button
+                      onClick={() => openCertificate(item)}
+                      className="btn-secondary"
+                      style={{ padding: '6px 12px', fontSize: 12, borderRadius: 8 }}
+                    >
+                      <Award size={14} className="text-amber-500" />
+                      <span>80G Certificate</span>
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

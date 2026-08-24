@@ -130,10 +130,10 @@ export function AppProvider({ children }) {
     const urgency = calculateUrgency(formData);
     const newDonation = {
       id: `FR-${Math.floor(2000 + Math.random() * 9000)}`,
-      donorId: currentUser.id,
-      donorName: currentUser.name,
-      donorPhone: currentUser.phone || '+91 98220 54321',
-      donorAddress: formData.location || currentUser.address,
+      donorId: currentUser?.id || `donor_${Date.now()}`,
+      donorName: currentUser?.name || 'Verified Food Donor',
+      donorPhone: formData.donorPhone || currentUser?.phone || '+91 98220 54321',
+      donorAddress: formData.location || currentUser?.address || 'Main City Area',
       foodType: formData.foodType,
       foodCategory: formData.foodCategory || 'Cooked Meal',
       quantity: Number(formData.quantity) || 50,
@@ -145,6 +145,8 @@ export function AppProvider({ children }) {
       temperature: '65°C (Freshly Cooked)',
       packaging: 'Sealed Containers',
       status: 'AVAILABLE', // Broadcast status
+      targetNgoId: formData.targetNgoId || null, // null = Broadcast to all
+      targetNgoName: formData.targetNgoName || null,
       matchedNgoId: null,
       matchedNgoName: null,
       driverName: null,
@@ -166,7 +168,12 @@ export function AppProvider({ children }) {
     }
 
     triggerConfetti();
-    showToast(`Donation #${newDonation.id} listed & broadcasted to nearby NGOs!`, 'success');
+    showToast(
+      formData.targetNgoName 
+        ? `🎯 Direct donation request sent to ${formData.targetNgoName} (#${newDonation.id})!`
+        : `📡 Surplus food broadcasted to all nearby NGOs (#${newDonation.id})!`, 
+      'success'
+    );
     return newDonation;
   };
 
