@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Truck, CheckCircle2, Clock, MapPin, AlertTriangle, MessageSquare, Phone, HeartHandshake } from 'lucide-react';
+import { Truck, CheckCircle2, Clock, MapPin, AlertTriangle, MessageSquare, Phone, HeartHandshake, Award } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import UrgencyBadge from '../components/UrgencyBadge';
 import RouteMap from '../components/RouteMap';
@@ -12,7 +12,8 @@ export default function ReceiverPortal() {
     acceptDonation,
     markFoodCollected,
     markDistributedToNeedy,
-    setActiveChatDonation
+    setActiveChatDonation,
+    openCertificate
   } = useApp();
 
   const [filterUrgency, setFilterUrgency] = useState('ALL'); // 'ALL' | 'URGENT' | 'MEDIUM'
@@ -58,45 +59,36 @@ export default function ReceiverPortal() {
           </div>
         </div>
 
-        {/* Shelter Capacity Badge */}
-        <div style={{
-          backgroundColor: '#eff6ff',
-          border: '1px solid #bfdbfe',
-          borderRadius: 12,
-          padding: '8px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10
-        }}>
-          <HeartHandshake className="text-sky-600" size={20} />
-          <div>
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#0284c7', textTransform: 'uppercase' }}>Shelter Capacity</span>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
-              Needs: <strong>{currentUser?.currentNeedMeals || 150} Meals</strong>
-            </div>
-          </div>
-        </div>
+        {/* View NGO 80G Certificate Button */}
+        <button
+          onClick={() => openCertificate(myCompletedRescues[0] || donations[0])}
+          className="btn-secondary"
+          style={{ padding: '9px 16px', fontSize: 13 }}
+        >
+          <Award size={16} className="text-amber-500" />
+          <span>View NGO 80G Certificate</span>
+        </button>
       </div>
 
-      {/* KPI Stats Row */}
+      {/* KPI Stats Row (Card 1: Shelter Capacity | Card 2: Nearby Surplus Food | Card 3: Total Meals Distributed) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+        <StatCard
+          title="Shelter Capacity"
+          value={currentUser?.currentNeedMeals || 120}
+          unit="meals"
+          subtitle="Current daily demand"
+          icon={HeartHandshake}
+          color="#0284c7"
+          trend="Daily Capacity"
+        />
         <StatCard
           title="Nearby Surplus Food"
           value={availableDonations.length}
           unit="listings"
-          subtitle="Nearby food awaiting rescue"
+          subtitle="Awaiting rescue"
           icon={AlertTriangle}
           color="#f59e0b"
           trend="Live Queue"
-        />
-        <StatCard
-          title="Active Rescues"
-          value={myActivePickups.length}
-          unit="in transit"
-          subtitle={`${totalMealsClaimed} meals being collected`}
-          icon={Truck}
-          color="#f43f5e"
-          trend="Live Dispatch"
         />
         <StatCard
           title="Total Meals Distributed"
@@ -288,11 +280,8 @@ export default function ReceiverPortal() {
                       </p>
                     </div>
 
-                    {/* 3-Waypoints Telemetric Route Map */}
+                    {/* Single Clean Visual 3-Waypoints Telemetric Route Map */}
                     <RouteMap
-                      donorAddress={item.donorAddress}
-                      shelterAddress={currentUser?.address || 'Hope Shelter Facility, Ring Road'}
-                      needyAddress="Slum Cluster & Night Shelter, Ward 12"
                       status={item.status}
                       etaMinutes={item.status === 'ACCEPTED' ? 6 : 4}
                     />

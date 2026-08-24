@@ -1,25 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Navigation, Truck, MapPin, CheckCircle2, Clock, Check } from 'lucide-react';
+import { Navigation, Truck, Check } from 'lucide-react';
 
 export default function RouteMap({
-  donorAddress,
-  from,
-  shelterAddress,
-  to,
-  needyAddress = 'Slum Cluster & Night Shelter, Ward 12',
   status = 'ACCEPTED',
   etaMinutes = 6
 }) {
-  const startAddr = donorAddress || from || 'Celebration Banquet, Sector 29';
-  const midAddr = shelterAddress || to || 'Hope Shelter Facility, Ring Road';
-  const endAddr = needyAddress;
-
   const isCollected = status === 'COLLECTED' || status === 'COMPLETED';
   const isCompleted = status === 'COMPLETED';
 
-  // Animated progress:
-  // If ACCEPTED: van moves between 10% and 45% (Donor -> NGO Shelter)
-  // If COLLECTED: van moves between 55% and 92% (NGO Shelter -> Needy Area)
+  // If ACCEPTED: van moves on Leg 1 (Donor -> Shelter, 15% to 46%)
+  // If COLLECTED: van moves on Leg 2 (Shelter -> Needy, 54% to 92%)
   // If COMPLETED: 100%
   const [progress, setProgress] = useState(isCompleted ? 100 : isCollected ? 65 : 25);
 
@@ -32,11 +22,9 @@ export default function RouteMap({
     const interval = setInterval(() => {
       setProgress(p => {
         if (!isCollected) {
-          // Leg 1: 15% to 48%
-          return p >= 46 ? 18 : p + 3;
+          return p >= 45 ? 18 : p + 3;
         } else {
-          // Leg 2: 54% to 92%
-          return p >= 90 ? 56 : p + 3;
+          return p >= 88 ? 55 : p + 3;
         }
       });
     }, 1200);
@@ -47,19 +35,19 @@ export default function RouteMap({
   return (
     <div style={{
       backgroundColor: '#090d16',
-      borderRadius: 18,
+      borderRadius: 16,
       border: '1px solid #1f2937',
-      padding: '18px 20px',
+      padding: '16px 18px',
       color: '#ffffff',
       display: 'flex',
       flexDirection: 'column',
-      gap: 14
+      gap: 12
     }}>
       {/* Header */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Navigation size={18} className="text-emerald-400" />
-          <span style={{ fontSize: 13, fontWeight: 800, color: '#f8fafc', letterSpacing: '0.04em' }}>
+          <Navigation size={17} className="text-emerald-400" />
+          <span style={{ fontSize: 13, fontWeight: 800, color: '#f8fafc', letterSpacing: '0.03em' }}>
             LIVE GPS RESCUE TELEMETRY
           </span>
         </div>
@@ -80,9 +68,9 @@ export default function RouteMap({
       {/* Visual GPS 3-Waypoints Path */}
       <div style={{
         position: 'relative',
-        height: 100,
+        height: 85,
         backgroundColor: 'rgba(255, 255, 255, 0.03)',
-        borderRadius: 14,
+        borderRadius: 12,
         border: '1px solid rgba(255, 255, 255, 0.08)',
         display: 'flex',
         alignItems: 'center',
@@ -130,7 +118,7 @@ export default function RouteMap({
             alignItems: 'center',
             justifyContent: 'center',
             boxShadow: isCollected ? '0 0 14px rgba(16, 185, 129, 0.7)' : '0 0 8px rgba(16, 185, 129, 0.4)',
-            fontSize: 16,
+            fontSize: 15,
             color: '#fff'
           }}>
             {isCollected ? <Check size={16} strokeWidth={3} /> : '🏢'}
@@ -160,7 +148,7 @@ export default function RouteMap({
             alignItems: 'center',
             justifyContent: 'center',
             boxShadow: isCollected ? '0 0 14px rgba(2, 132, 199, 0.7)' : 'none',
-            fontSize: 16,
+            fontSize: 15,
             color: '#fff',
             border: isCollected ? '2px solid #38bdf8' : '1px solid #475569'
           }}>
@@ -184,8 +172,8 @@ export default function RouteMap({
             zIndex: 3
           }}>
             <div style={{
-              width: 30,
-              height: 30,
+              width: 28,
+              height: 28,
               borderRadius: 8,
               backgroundColor: isCollected ? '#0284c7' : '#d97706',
               display: 'flex',
@@ -194,7 +182,7 @@ export default function RouteMap({
               color: '#fff',
               boxShadow: isCollected ? '0 0 14px rgba(2, 132, 199, 0.9)' : '0 0 14px rgba(217, 119, 6, 0.9)'
             }}>
-              <Truck size={15} />
+              <Truck size={14} />
             </div>
             <span style={{ fontSize: 9, fontWeight: 800, color: isCollected ? '#38bdf8' : '#fbbf24', whiteSpace: 'nowrap' }}>
               {isCollected ? '~4m ETA' : '~6m ETA'}
@@ -220,7 +208,7 @@ export default function RouteMap({
             alignItems: 'center',
             justifyContent: 'center',
             boxShadow: isCompleted ? '0 0 14px rgba(16, 185, 129, 0.7)' : isCollected ? '0 0 14px rgba(244, 63, 94, 0.6)' : 'none',
-            fontSize: 16,
+            fontSize: 15,
             color: '#fff',
             border: isCollected ? '2px solid #f43f5e' : '1px solid #475569'
           }}>
@@ -229,56 +217,6 @@ export default function RouteMap({
           <span style={{ fontSize: 10, fontWeight: 800, color: isCompleted ? '#34d399' : isCollected ? '#fca5a5' : '#94a3b8' }}>
             {isCompleted ? '✓ Distributed' : '3. Needy Area'}
           </span>
-        </div>
-
-      </div>
-
-      {/* 3-Column Waypoint Detail Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, fontSize: 11 }}>
-        
-        {/* Step 1: Donor Pickup */}
-        <div style={{
-          backgroundColor: isCollected ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255, 255, 255, 0.03)',
-          border: isCollected ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: 10,
-          padding: '8px 10px'
-        }}>
-          <span style={{ color: isCollected ? '#34d399' : '#94a3b8', fontWeight: 700 }}>
-            {isCollected ? '✓ Pickup Done:' : '1. Pickup Point:'}
-          </span>
-          <p style={{ fontWeight: 700, color: '#f1f5f9', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {startAddr}
-          </p>
-        </div>
-
-        {/* Step 2: Shelter Transit */}
-        <div style={{
-          backgroundColor: isCollected ? 'rgba(2, 132, 199, 0.08)' : 'rgba(255, 255, 255, 0.03)',
-          border: isCollected ? '1px solid rgba(2, 132, 199, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: 10,
-          padding: '8px 10px'
-        }}>
-          <span style={{ color: isCollected ? '#38bdf8' : '#94a3b8', fontWeight: 700 }}>
-            2. Transit Hub:
-          </span>
-          <p style={{ fontWeight: 700, color: '#f1f5f9', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {midAddr}
-          </p>
-        </div>
-
-        {/* Step 3: Needy Community Area */}
-        <div style={{
-          backgroundColor: isCompleted ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255, 255, 255, 0.03)',
-          border: isCompleted ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: 10,
-          padding: '8px 10px'
-        }}>
-          <span style={{ color: isCompleted ? '#34d399' : '#fca5a5', fontWeight: 700 }}>
-            {isCompleted ? '✓ Distributed:' : '3. Needy Destination:'}
-          </span>
-          <p style={{ fontWeight: 700, color: '#f1f5f9', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {endAddr}
-          </p>
         </div>
 
       </div>
