@@ -134,6 +134,7 @@ export function AppProvider({ children }) {
       donorName: currentUser?.name || 'Verified Food Donor',
       donorPhone: formData.donorPhone || currentUser?.phone || '+91 98220 54321',
       donorAddress: formData.location || currentUser?.address || 'Main City Area',
+      distanceLabel: `${(Math.random() * 2.5 + 1.2).toFixed(1)} km away`,
       foodType: formData.foodType,
       foodCategory: formData.foodCategory || 'Cooked Meal',
       quantity: Number(formData.quantity) || 50,

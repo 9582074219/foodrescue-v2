@@ -177,7 +177,7 @@ export default function ReceiverPortal() {
                     </div>
 
                     <span style={{ fontSize: 12, fontWeight: 800, color: '#0284c7' }}>
-                      📍 ~2.4 km away
+                      📍 ~{item.distanceLabel || '2.4 km away'}
                     </span>
                   </div>
 
