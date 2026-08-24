@@ -20,9 +20,9 @@ export default function Footer() {
         
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#f8fafc', fontWeight: 800, fontSize: 14 }}>
-            <span>🍱 FoodRescue V2</span>
+            <span>🍱 ReplateX</span>
             <span style={{ color: '#10b981' }}>•</span>
-            <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 500 }}>AI Smart Food Redistribution</span>
+            <span style={{ color: '#94a3b8', fontSize: 12, fontWeight: 500, fontStyle: 'italic' }}>“Food that would have been wasted, gets another plate.”</span>
           </div>
           <p style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
             Connecting Commercial Food Donors directly to Verified NGOs before spoilage occurs.
@@ -37,7 +37,7 @@ export default function Footer() {
             <ShieldCheck size={14} /> 80G Tax Compliant
           </span>
           <a
-            href="https://github.com/9582074219/foodrescue-ai"
+            href="https://github.com/9582074219/foodrescue-v2"
             target="_blank"
             rel="noreferrer"
             style={{ color: '#94a3b8', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}

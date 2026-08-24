@@ -93,10 +93,10 @@ export default function AuthGateway() {
           </div>
 
           <h1 style={{ fontSize: 34, fontWeight: 900, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em', color: '#ffffff' }}>
-            Welcome to <span style={{ color: '#10b981' }}>FoodRescue V2</span>
+            Welcome to <span style={{ color: '#10b981' }}>ReplateX</span>
           </h1>
-          <p style={{ fontSize: 15, color: '#94a3b8', marginTop: 6 }}>
-            Select your portal to login or register:
+          <p style={{ fontSize: 14, color: '#94a3b8', marginTop: 6, fontStyle: 'italic' }}>
+            “Food that would have been wasted, gets another plate.”
           </p>
         </div>
 

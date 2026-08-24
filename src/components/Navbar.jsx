@@ -47,14 +47,14 @@ export default function Navbar() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 18, fontWeight: 900, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em', color: '#f8fafc' }}>
-                FoodRescue <span style={{ color: '#10b981' }}>V2</span>
+                Replate<span style={{ color: '#10b981' }}>X</span>
               </span>
               <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 6px', backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#34d399', borderRadius: 6, border: '1px solid rgba(16, 185, 129, 0.4)' }}>
                 AI REALTIME
               </span>
             </div>
-            <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>
-              Smart Surplus Prediction & Direct NGO Redistribution
+            <p style={{ fontSize: 11, color: '#94a3b8', margin: 0, fontStyle: 'italic' }}>
+              “Food that would have been wasted, gets another plate.”
             </p>
           </div>
         </div>

@@ -133,7 +133,7 @@ export default function CertificateModal() {
           </div>
 
           <div style={{ fontSize: 12, color: '#94a3b8', borderTop: '1px solid #e2e8f0', paddingTop: 16 }}>
-            Issued via FoodRescue AI Smart Redistribution Engine • Digitally Signed & Encrypted
+            Issued via ReplateX Smart Redistribution Engine • Digitally Signed & Encrypted
           </div>
 
         </div>
